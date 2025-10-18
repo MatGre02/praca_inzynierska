@@ -1,0 +1,18 @@
+# node
+node_modules
+dist
+build
+.env
+.env.*
+npm-debug.log*
+
+# systemowe
+.DS_Store
+Thumbs.db
+
+# edytory
+.vscode
+.idea
+
+# testy i raporty
+coverage
