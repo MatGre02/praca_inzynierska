@@ -7,11 +7,11 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
+    "module": "commonjs",
     "target": "esnext",
     // For nodejs:
      "lib": ["ES2020"],
-     "moduleResolution": "nodenext",
+     "moduleResolution": "node",
      "esModuleInterop": true,
      "types": ["node"],
     // and npm install -D @types/node
