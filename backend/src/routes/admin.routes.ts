@@ -19,7 +19,7 @@ router.get("/uzytkownicy", authMiddleware, tylkoPrezes, async (req, res) => {
  */
 router.post("/uzytkownicy", authMiddleware, tylkoPrezes, async (req, res) => {
   try {
-    const { email, haslo, rola, imie, nazwisko } = req.body;
+    const { email, haslo, rola, imie, nazwisko, kategoria } = req.body;
 
     const istnieje = await Uzytkownik.findOne({ email });
     if (istnieje) return res.status(409).json({ message: "Użytkownik już istnieje" });
@@ -32,6 +32,7 @@ router.post("/uzytkownicy", authMiddleware, tylkoPrezes, async (req, res) => {
       rola,
       imie,
       nazwisko,
+      kategoria: kategoria ?? "BRAK"
     });
 
     res.status(201).json({
@@ -52,5 +53,28 @@ router.delete("/uzytkownicy/:id", authMiddleware, tylkoPrezes, async (req, res) 
   await Uzytkownik.findByIdAndDelete(id);
   res.json({ message: "Użytkownik usunięty" });
 });
+
+/**
+ * PUT /api/admin/uzytkownicy/:id — edycja danych użytkownika
+ */
+router.put("/uzytkownicy/:id", authMiddleware, tylkoPrezes, async (req, res) => {
+  try {
+    const { rola, imie, nazwisko, telefon, narodowosc, pozycja, kategoria } = req.body;
+
+    const updated = await Uzytkownik.findByIdAndUpdate(
+      req.params.id,
+      { rola, imie, nazwisko, telefon, narodowosc, pozycja, kategoria },
+      { new: true }
+    ).select("-hasloHash");
+
+    if (!updated) return res.status(404).json({ message: "Nie znaleziono użytkownika" });
+
+    res.json(updated);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
 
 export default router;

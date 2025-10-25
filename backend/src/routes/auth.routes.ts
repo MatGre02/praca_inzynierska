@@ -13,7 +13,7 @@ const router = Router();
  */
 router.post("/rejestracja", async (req, res) => {
   try {
-    const body = rejestracjaSchema.parse(req.body);
+    const body = rejestracjaSchema.extend({ kategoria: z.string().optional() }).parse(req.body);
 
     const istnieje = await Uzytkownik.findOne({ email: body.email });
     if (istnieje) return res.status(409).json({ message: "Uzytkownik juz istnieje" });
@@ -28,7 +28,8 @@ router.post("/rejestracja", async (req, res) => {
       nazwisko: body.nazwisko,
       telefon: body.telefon,
       narodowosc: body.narodowosc,
-      pozycja: body.pozycja ?? null
+      pozycja: body.pozycja ?? null,
+      kategoria: body.kategoria ?? "BRAK"
     });
 
     return res.status(201).json({
