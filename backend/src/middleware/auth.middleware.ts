@@ -17,7 +17,6 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
       return res.status(401).json({ message: "Brak tokenu autoryzacyjnego" });
     }
 
-    // 🔧 Poprawka typowania — TS już wie, że to string
     const token: string = authHeader.split(" ")[1]!;
 
     const decoded = sprawdzJwt(token);

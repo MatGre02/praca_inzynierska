@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes";
 import adminRoutes from "./routes/admin.routes";
+import statystykiRoutes from "./routes/statystyki.routes";
 
 const app = express();
 
@@ -14,5 +15,5 @@ app.get("/api/status", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
-
+app.use("/api/statystyki", statystykiRoutes);
 export default app;
