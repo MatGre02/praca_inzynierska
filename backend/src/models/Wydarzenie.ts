@@ -19,8 +19,11 @@ export interface IWydarzenie extends Document {
   opis?: string;
   typ: TypWydarzenia;
   data: Date;
+  dataKonca?: Date;
+  lokalizacja?: string;
   utworzyl: mongoose.Types.ObjectId;           // ref do Uzytkownik (prezes/trener)
   uczestnicy: IUczestnik[];                     // tylko dla TRENING – inni też mogą, ale nie wymagane
+  reminderSent?: boolean;                       // flaga dla crona
 }
 
 const UczestnikSchema = new Schema<IUczestnik>({
@@ -38,8 +41,11 @@ const WydarzenieSchema = new Schema<IWydarzenie>(
       required: true
     },
     data: { type: Date, required: true },
+    dataKonca: { type: Date },
+    lokalizacja: { type: String },
     utworzyl: { type: Schema.Types.ObjectId, ref: "Uzytkownik", required: true },
-    uczestnicy: { type: [UczestnikSchema], default: [] }
+    uczestnicy: { type: [UczestnikSchema], default: [] },
+    reminderSent: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

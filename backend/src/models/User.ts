@@ -22,6 +22,10 @@ export interface IUser extends Document {
   narodowosc?: string;
   pozycja?: Pozycja;
   kategoria?: Kategoria;
+  contractStart?: Date;
+  contractEnd?: Date;
+  resetTokenHash?: string;
+  resetTokenExp?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +41,10 @@ const UserSchema = new Schema<IUser>(
     narodowosc: { type: String },
     pozycja: { type: String, enum: ["BRAMKARZ", "OBRONCA", "POMOCNIK", "NAPASTNIK", null], default: null },
     kategoria: { type: String, enum: ["U9", "U11", "U13", "U15", "U17", "U19", "SENIOR", "BRAK"], default: "BRAK" },
+    contractStart: { type: Date },
+    contractEnd: { type: Date },
+    resetTokenHash: { type: String },
+    resetTokenExp: { type: Date },
   },
   { timestamps: true }
 );

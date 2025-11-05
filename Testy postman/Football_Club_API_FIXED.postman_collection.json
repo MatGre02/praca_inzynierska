@@ -1,0 +1,315 @@
+{
+  "info": {
+    "_postman_id": "football-club-api-fixed",
+    "name": "Football Club API - FIXED (bez błędów)",
+    "description": "Kolekcja testów bez cyrylicy - TYLKO POLSKI",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🔐 AUTH",
+      "item": [
+        {
+          "name": "Login PREZES",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.environment.set('PREZES_TOKEN', data.token);",
+                  "    pm.environment.set('PREZES_ID', data.uzytkownik._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"email\": \"prezes@klub.pl\", \"haslo\": \"Haslo123!\"}"},
+            "url": {"raw": "{{BASE_URL}}/auth/logowanie", "host": ["{{BASE_URL}}"], "path": ["auth", "logowanie"]}
+          }
+        },
+        {
+          "name": "Login TRENER",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.environment.set('TRENER_TOKEN', data.token);",
+                  "    pm.environment.set('TRENER_ID', data.uzytkownik._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"email\": \"trener@klub.pl\", \"haslo\": \"Haslo123!\"}"},
+            "url": {"raw": "{{BASE_URL}}/auth/logowanie", "host": ["{{BASE_URL}}"], "path": ["auth", "logowanie"]}
+          }
+        },
+        {
+          "name": "Login ZAWODNIK",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.environment.set('ZAWODNIK_TOKEN', data.token);",
+                  "    pm.environment.set('ZAWODNIK_ID', data.uzytkownik._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"email\": \"zawodnik@klub.pl\", \"haslo\": \"Haslo123!\"}"},
+            "url": {"raw": "{{BASE_URL}}/auth/logowanie", "host": ["{{BASE_URL}}"], "path": ["auth", "logowanie"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 ADMIN",
+      "item": [
+        {
+          "name": "GET /uzytkownicy (lista) - Pobierz ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    if (data.data && data.data.length > 0) {",
+                  "        const firstUser = data.data[0];",
+                  "        pm.environment.set('ZAWODNIK_ID', firstUser._id);",
+                  "        console.log('Ustawiono ZAWODNIK_ID: ' + firstUser._id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}],
+            "url": {"raw": "{{BASE_URL}}/admin/uzytkownicy", "host": ["{{BASE_URL}}"], "path": ["admin", "uzytkownicy"]}
+          }
+        },
+        {
+          "name": "GET /uzytkownicy/:id - Test z ZAWODNIK_ID",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}],
+            "url": {"raw": "{{BASE_URL}}/admin/uzytkownicy/{{ZAWODNIK_ID}}", "host": ["{{BASE_URL}}"], "path": ["admin", "uzytkownicy", "{{ZAWODNIK_ID}}"]}
+          }
+        },
+        {
+          "name": "PATCH /uzytkownicy/:id/role",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"rola\": \"TRENER\"}"},
+            "url": {"raw": "{{BASE_URL}}/admin/uzytkownicy/{{ZAWODNIK_ID}}/role", "host": ["{{BASE_URL}}"], "path": ["admin", "uzytkownicy", "{{ZAWODNIK_ID}}", "role"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 STATYSTYKI",
+      "item": [
+        {
+          "name": "POST /statystyki/:zawodnikId",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"sezon\": \"2024/2025\", \"rozegraneMinuty\": 450, \"strzeloneBramki\": 5, \"zolteKartki\": 2, \"czerwoneKartki\": 0, \"odbytychTreningow\": 12}"},
+            "url": {"raw": "{{BASE_URL}}/statystyki/{{ZAWODNIK_ID}}", "host": ["{{BASE_URL}}"], "path": ["statystyki", "{{ZAWODNIK_ID}}"]}
+          }
+        },
+        {
+          "name": "GET /statystyki/:zawodnikId",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{ZAWODNIK_TOKEN}}"}],
+            "url": {"raw": "{{BASE_URL}}/statystyki/{{ZAWODNIK_ID}}", "host": ["{{BASE_URL}}"], "path": ["statystyki", "{{ZAWODNIK_ID}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "📅 WYDARZENIA",
+      "item": [
+        {
+          "name": "POST /wydarzenia (crear)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.environment.set('EVENT_ID', data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"tytul\": \"Mecz ligowy\", \"typ\": \"MECZ_LIGOWY\", \"data\": \"2025-11-15T15:00:00Z\", \"dataKonca\": \"2025-11-15T17:00:00Z\", \"lokalizacja\": \"Stadion\", \"opis\": \"Test\"}"},
+            "url": {"raw": "{{BASE_URL}}/wydarzenia", "host": ["{{BASE_URL}}"], "path": ["wydarzenia"]}
+          }
+        },
+        {
+          "name": "GET /wydarzenia (lista)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}],
+            "url": {"raw": "{{BASE_URL}}/wydarzenia", "host": ["{{BASE_URL}}"], "path": ["wydarzenia"]}
+          }
+        },
+        {
+          "name": "GET /wydarzenia/:id",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}],
+            "url": {"raw": "{{BASE_URL}}/wydarzenia/{{EVENT_ID}}", "host": ["{{BASE_URL}}"], "path": ["wydarzenia", "{{EVENT_ID}}"]}
+          }
+        },
+        {
+          "name": "PATCH /wydarzenia/:id",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"tytul\": \"Zmieniony tytuł\"}"},
+            "url": {"raw": "{{BASE_URL}}/wydarzenia/{{EVENT_ID}}", "host": ["{{BASE_URL}}"], "path": ["wydarzenia", "{{EVENT_ID}}"]}
+          }
+        },
+        {
+          "name": "DELETE /wydarzenia/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}],
+            "url": {"raw": "{{BASE_URL}}/wydarzenia/{{EVENT_ID}}", "host": ["{{BASE_URL}}"], "path": ["wydarzenia", "{{EVENT_ID}}"]}
+          }
+        },
+        {
+          "name": "POST /:id/udzial (RSVP)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{ZAWODNIK_TOKEN}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"odpowiedz\": \"TAK\"}"},
+            "url": {"raw": "{{BASE_URL}}/wydarzenia/{{EVENT_ID}}/udzial", "host": ["{{BASE_URL}}"], "path": ["wydarzenia", "{{EVENT_ID}}", "udzial"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 SQUAD",
+      "item": [
+        {
+          "name": "POST /squads (create)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"eventId\": \"{{EVENT_ID}}\", \"playerIds\": [\"{{ZAWODNIK_ID}}\"]}"},
+            "url": {"raw": "{{BASE_URL}}/squads", "host": ["{{BASE_URL}}"], "path": ["squads"]}
+          }
+        },
+        {
+          "name": "GET /squads/:eventId",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}],
+            "url": {"raw": "{{BASE_URL}}/squads/{{EVENT_ID}}", "host": ["{{BASE_URL}}"], "path": ["squads", "{{EVENT_ID}}"]}
+          }
+        },
+        {
+          "name": "PATCH /squads/:eventId",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"playerIds\": [\"{{ZAWODNIK_ID}}\"]}"},
+            "url": {"raw": "{{BASE_URL}}/squads/{{EVENT_ID}}", "host": ["{{BASE_URL}}"], "path": ["squads", "{{EVENT_ID}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "✉️ MAIL",
+      "item": [
+        {
+          "name": "POST /send",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"to\": [\"{{ZAWODNIK_ID}}\"], \"subject\": \"Test maila\", \"html\": \"<p>Testowy mail - to jest treść HTML</p>\"}"},
+            "url": {"raw": "{{BASE_URL}}/mail/send", "host": ["{{BASE_URL}}"], "path": ["mail", "send"]}
+          }
+        },
+        {
+          "name": "POST /send-category",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"category\": \"U19\", \"subject\": \"Broadcast do kategorii\", \"html\": \"<p>Wiadomość dla całej kategorii</p>\"}"},
+            "url": {"raw": "{{BASE_URL}}/mail/send-category", "host": ["{{BASE_URL}}"], "path": ["mail", "send-category"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "📈 REPORTS",
+      "item": [
+        {
+          "name": "GET /reports/players?format=json",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}],
+            "url": {"raw": "{{BASE_URL}}/reports/players?format=json", "host": ["{{BASE_URL}}"], "path": ["reports", "players"], "query": [{"key": "format", "value": "json"}]}
+          }
+        },
+        {
+          "name": "GET /reports/players?format=csv",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}],
+            "url": {"raw": "{{BASE_URL}}/reports/players?format=csv", "host": ["{{BASE_URL}}"], "path": ["reports", "players"], "query": [{"key": "format", "value": "csv"}]}
+          }
+        },
+        {
+          "name": "GET /reports/category/:category",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{PREZES_TOKEN}}"}],
+            "url": {"raw": "{{BASE_URL}}/reports/category/U19?format=json", "host": ["{{BASE_URL}}"], "path": ["reports", "category", "U19"], "query": [{"key": "format", "value": "json"}]}
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {"key": "BASE_URL", "value": "http://localhost:4000/api", "type": "string"},
+    {"key": "PREZES_TOKEN", "value": "", "type": "string"},
+    {"key": "TRENER_TOKEN", "value": "", "type": "string"},
+    {"key": "ZAWODNIK_TOKEN", "value": "", "type": "string"},
+    {"key": "PREZES_ID", "value": "", "type": "string"},
+    {"key": "TRENER_ID", "value": "", "type": "string"},
+    {"key": "ZAWODNIK_ID", "value": "", "type": "string"},
+    {"key": "EVENT_ID", "value": "", "type": "string"}
+  ]
+}

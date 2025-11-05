@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: football-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+      MONGO_INITDB_DATABASE: football_club
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - football-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: football-backend
+    environment:
+      PORT: 4000
+      MONGO_URI: mongodb://root:rootpassword@mongodb:27017/football_club?authSource=admin
+      JWT_SECRET: moj_klucz_testowy_123
+      JWT_EXPIRES_IN: 7d
+      SMTP_HOST: poczta.onet.pl
+      SMTP_PORT: 587
+      SMTP_USER: pracainzynierskamg@op.pl
+      SMTP_PASS: ${SMTP_PASS:-your_password}
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongodb
+    networks:
+      - football-network
+    volumes:
+      - ./backend/src:/app/src
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: football-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:4000/api
+    depends_on:
+      - backend
+    networks:
+      - football-network
+
+volumes:
+  mongo_data:
+
+networks:
+  football-network:
+    driver: bridge

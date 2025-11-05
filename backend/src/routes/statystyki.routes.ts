@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { Statystyka } from "../models/Statystyka";
+import { Uzytkownik } from "../models/User";
 import { authMiddleware, AuthRequest } from "../middleware/auth.middleware";
 import { sprawdzRole } from "../middleware/rola.middleware";
 
@@ -9,6 +10,7 @@ const router = Router();
  * POST /api/statystyki/:zawodnikId
  * Dodaj / zaktualizuj statystyki zawodnika (PREZES, TRENER)
  * Jeżeli podasz "sezon" w body – trzymamy jedną kartę na sezon (upsert).
+ * TRENER może edytować tylko zawodników z JEGO kategorii
  */
 router.post("/:zawodnikId",
   authMiddleware,
@@ -25,6 +27,19 @@ router.post("/:zawodnikId",
         odbytychTreningow,
         czysteKonta
       } = req.body ?? {};
+
+      // Pobierz trenera/prezesa
+      const requester = await Uzytkownik.findById(req.user?.id);
+      
+      // Jeśli TRENER – sprawdź czy zawodnik z jego kategorii
+      if (requester?.rola === "TRENER") {
+        const zawodnik = await Uzytkownik.findById(zawodnikId);
+        if (!zawodnik || zawodnik.kategoria !== requester.kategoria) {
+          return res.status(403).json({
+            message: "Nie możesz edytować statystyk zawodników z innej kategorii"
+          });
+        }
+      }
 
       const filter: any = { zawodnikId };
       if (sezon) filter.sezon = sezon;

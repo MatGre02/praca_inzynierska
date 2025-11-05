@@ -29,11 +29,78 @@ router.post("/", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: 
 });
 
 // Lista wydarzeń (wszyscy zalogowani)
+// Query params: ?type=TRENING&month=12&year=2024&limit=50&skip=0
+// ZAWODNIK widzi tylko eventy z JEGO kategorii
+// TRENER widzi wszystkie
+// PREZES widzi wszystkie
 router.get("/", authMiddleware, async (req: AuthRequest, res) => {
   try {
-    const wydarzenia = await Wydarzenie.find().sort({ data: 1 });
-    res.json(wydarzenia);
+    const { type, month, year, limit = "50", skip = "0" } = req.query;
+    const requester = await Uzytkownik.findById(req.user?.id);
+
+    // Budowanie filtru
+    const filter: any = {};
+
+    // Filtrowanie po typie
+    if (type) {
+      filter.typ = type;
+    }
+
+    // Filtrowanie po miesiącu i roku
+    if (month && year) {
+      const startDate = new Date(parseInt(year as string), parseInt(month as string) - 1, 1);
+      const endDate = new Date(parseInt(year as string), parseInt(month as string), 0);
+      filter.data = { $gte: startDate, $lte: endDate };
+    } else if (year) {
+      const startDate = new Date(parseInt(year as string), 0, 1);
+      const endDate = new Date(parseInt(year as string), 11, 31);
+      filter.data = { $gte: startDate, $lte: endDate };
+    }
+
+    // ZAWODNIK widzi tylko eventy z JEGO kategorii
+    // (zawodnik może mieć tylko jedną kategorię)
+    if (requester?.rola === "ZAWODNIK") {
+      // Zawodnik widzi wszystkie eventy (bo nie ma filtrowania po kategorii w modelu)
+      // W przyszłości można dodać pole visibleToCategory w Wydarzeniu
+    }
+
+    // Paginacja
+    const limitNum = Math.min(parseInt(limit as string) || 50, 100);
+    const skipNum = parseInt(skip as string) || 0;
+
+    // Pobieranie danych
+    const wydarzenia = await Wydarzenie.find(filter)
+      .populate("utworzyl", "imie nazwisko rola")
+      .sort({ data: 1 })
+      .limit(limitNum)
+      .skip(skipNum);
+
+    // Liczba całkowita
+    const total = await Wydarzenie.countDocuments(filter);
+
+    // Dla ZAWODNIKA – usuń listę uczestników
+    if (requester?.rola === "ZAWODNIK") {
+      const filtered = wydarzenia.map((w) => {
+        const obj = w.toObject();
+        delete (obj as any).uczestnicy;
+        return obj;
+      });
+      return res.json({
+        total,
+        limit: limitNum,
+        skip: skipNum,
+        data: filtered
+      });
+    }
+
+    res.json({
+      total,
+      limit: limitNum,
+      skip: skipNum,
+      data: wydarzenia
+    });
   } catch (e) {
+    console.error("Błąd pobierania wydarzeń:", e);
     res.status(500).json({ message: "Błąd serwera" });
   }
 });
@@ -119,6 +186,79 @@ router.get("/:id/uczestnicy", authMiddleware, sprawdzRole(["PREZES", "TRENER"]),
     if (!doc) return res.status(404).json({ message: "Nie znaleziono" });
     res.json(doc.uczestnicy);
   } catch (e) {
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+/**
+ * PATCH /api/wydarzenia/:id
+ * Edytuje wydarzenie (tylko twórca lub PREZES)
+ */
+router.patch("/:id", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: AuthRequest, res) => {
+  try {
+    const { tytul, opis, typ, data, lokalizacja, dataKonca } = req.body;
+
+    const wydarzenie = await Wydarzenie.findById(req.params.id);
+    if (!wydarzenie) {
+      return res.status(404).json({ message: "Nie znaleziono wydarzenia" });
+    }
+
+    // Tylko twórca lub PREZES mogą edytować
+    if (
+      req.user?.rola !== "PREZES" &&
+      String(wydarzenie.utworzyl) !== String(req.user?.id)
+    ) {
+      return res.status(403).json({
+        message: "Nie masz uprawnień do edycji tego wydarzenia"
+      });
+    }
+
+    // Aktualizuj pola
+    if (tytul) wydarzenie.tytul = tytul;
+    if (opis) wydarzenie.opis = opis;
+    if (typ) wydarzenie.typ = typ;
+    if (data) wydarzenie.data = new Date(data);
+    if (lokalizacja) wydarzenie.lokalizacja = lokalizacja;
+    if (dataKonca) wydarzenie.dataKonca = new Date(dataKonca);
+
+    await wydarzenie.save();
+
+    res.json({
+      message: "Wydarzenie zaktualizowane",
+      data: wydarzenie
+    });
+  } catch (e) {
+    console.error("Błąd edycji wydarzenia:", e);
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+/**
+ * DELETE /api/wydarzenia/:id
+ * Usuwa wydarzenie (tylko twórca lub PREZES)
+ */
+router.delete("/:id", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: AuthRequest, res) => {
+  try {
+    const wydarzenie = await Wydarzenie.findById(req.params.id);
+    if (!wydarzenie) {
+      return res.status(404).json({ message: "Nie znaleziono wydarzenia" });
+    }
+
+    // Tylko twórca lub PREZES mogą usuwać
+    if (
+      req.user?.rola !== "PREZES" &&
+      String(wydarzenie.utworzyl) !== String(req.user?.id)
+    ) {
+      return res.status(403).json({
+        message: "Nie masz uprawnień do usunięcia tego wydarzenia"
+      });
+    }
+
+    await Wydarzenie.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Wydarzenie usunięte" });
+  } catch (e) {
+    console.error("Błąd usuwania wydarzenia:", e);
     res.status(500).json({ message: "Błąd serwera" });
   }
 });
