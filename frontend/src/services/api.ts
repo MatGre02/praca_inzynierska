@@ -47,6 +47,8 @@ export const adminService = {
     client.patch(`/admin/uzytkownicy/${id}/position`, { pozycja }),
   updateUserCategory: (id: string, kategoria: string) =>
     client.patch(`/admin/uzytkownicy/${id}/category`, { kategoria }),
+  updateUserPassword: (id: string, haslo: string) =>
+    client.patch(`/admin/uzytkownicy/${id}/password`, { haslo }),
   deleteUser: (id: string) =>
     client.delete(`/admin/uzytkownicy/${id}`),
 };
@@ -58,8 +60,8 @@ export const statystykiService = {
     client.get(`/statystyki/${zawodnikId}`),
   addStats: (zawodnikId: string, data: any) =>
     client.post(`/statystyki/${zawodnikId}`, data),
-  updateStats: (id: string, data: any) =>
-    client.patch(`/statystyki/${id}`, data),
+  updateStats: (statystykaId: string, data: any) =>
+    client.patch(`/statystyki/${statystykaId}`, data),
 };
 
 export const wydarzeniaService = {

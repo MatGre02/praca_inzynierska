@@ -3,6 +3,7 @@ import * as jwt from "jsonwebtoken";
 export type DaneTokena = {
   sub: string;
   rola: "PREZES" | "TRENER" | "ZAWODNIK";
+  kategoria?: string | "BRAK";
 };
 
 export const generujJwt = (dane: DaneTokena): string => {

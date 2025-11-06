@@ -58,7 +58,11 @@ router.post("/logowanie", async (req, res) => {
     const ok = await verifyPassword(body.haslo, uzytkownik.hasloHash);
     if (!ok) return res.status(401).json({ message: "Nieprawidlowe dane logowania" });
 
-    const token = generujJwt({ sub: uzytkownik.id, rola: uzytkownik.rola });
+    const token = generujJwt({ 
+      sub: uzytkownik.id, 
+      rola: uzytkownik.rola, 
+      kategoria: uzytkownik.kategoria || "BRAK"
+    });
 
     return res.json({
       token,
@@ -67,7 +71,13 @@ router.post("/logowanie", async (req, res) => {
         email: uzytkownik.email,
         rola: uzytkownik.rola,
         imie: uzytkownik.imie,
-        nazwisko: uzytkownik.nazwisko
+        nazwisko: uzytkownik.nazwisko,
+        kategoria: uzytkownik.kategoria,
+        pozycja: uzytkownik.pozycja,
+        telefon: uzytkownik.telefon,
+        narodowosc: uzytkownik.narodowosc,
+        contractStart: uzytkownik.contractStart,
+        contractEnd: uzytkownik.contractEnd
       }
     });
   } catch (e) {

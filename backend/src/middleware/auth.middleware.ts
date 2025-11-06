@@ -7,6 +7,7 @@ export interface AuthRequest extends Request {
     id: string;
     rola: string;
     email?: string;
+    kategoria?: string | undefined;
   };
 }
 
@@ -29,7 +30,8 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
     req.user = {
       id: user.id,
       rola: user.rola,
-      email: user.email
+      email: user.email,
+      kategoria: user.kategoria
     };
 
     next();

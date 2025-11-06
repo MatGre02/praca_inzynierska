@@ -32,8 +32,9 @@ router.get("/uzytkownicy", authMiddleware, async (req: any, res) => {
       // ZAWODNIK widzi tylko trenerów i PREZES-a
       filter.rola = { $in: ["TRENER", "PREZES"] };
     } else if (req.user?.rola === "TRENER") {
-      // TRENER - zwracamy wszystkich, frontend filtruje
-      // Brak filtrowania na backendzie - niech frontend się zajmuje
+      // TRENER widzi zawodników z jego kategorii
+      filter.rola = "ZAWODNIK";
+      filter.kategoria = req.user?.kategoria;
     }
 
     // Paginacja
@@ -67,12 +68,14 @@ router.get("/uzytkownicy", authMiddleware, async (req: any, res) => {
  */
 router.post("/uzytkownicy", authMiddleware, tylkoPrezes, async (req, res) => {
   try {
-    const { email, haslo, rola, imie, nazwisko, kategoria } = req.body;
+    const { email, rola, imie, nazwisko, kategoria, telefon, narodowosc, pozycja, contractStart, contractEnd } = req.body;
 
     const istnieje = await Uzytkownik.findOne({ email });
     if (istnieje) return res.status(409).json({ message: "Użytkownik już istnieje" });
 
-    const hasloHash = await hashPassword(haslo);
+    // Generuj losowe hasło
+    const losoweHaslo = Math.random().toString(36).slice(-8);
+    const hasloHash = await hashPassword(losoweHaslo);
 
     const nowy = await Uzytkownik.create({
       email,
@@ -80,15 +83,22 @@ router.post("/uzytkownicy", authMiddleware, tylkoPrezes, async (req, res) => {
       rola,
       imie,
       nazwisko,
-      kategoria: kategoria ?? "BRAK"
+      kategoria: kategoria ?? "BRAK",
+      telefon: telefon || null,
+      narodowosc: narodowosc || null,
+      pozycja: pozycja || null,
+      contractStart: contractStart ? new Date(contractStart) : null,
+      contractEnd: contractEnd ? new Date(contractEnd) : null,
     });
 
     res.status(201).json({
       id: nowy.id,
       email: nowy.email,
-      rola: nowy.rola
+      rola: nowy.rola,
+      message: `✅ Użytkownik ${imie} ${nazwisko} został utworzony. Tymczasowe hasło: ${losoweHaslo}`
     });
   } catch (e) {
+    console.error("Błąd tworzenia użytkownika:", e);
     res.status(500).json({ message: "Błąd serwera" });
   }
 });
@@ -256,6 +266,38 @@ router.patch("/uzytkownicy/:id/category", authMiddleware, tylkoPrezes, async (re
 
     res.json({
       message: "Kategoria zmieniona",
+      user: updated
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+/**
+ * PATCH /api/admin/uzytkownicy/:id/password
+ * Zmienia hasło użytkownika (PREZES only)
+ */
+router.patch("/uzytkownicy/:id/password", authMiddleware, tylkoPrezes, async (req, res) => {
+  try {
+    const { haslo } = req.body;
+
+    if (!haslo || haslo.length < 6) {
+      return res.status(400).json({ message: "Hasło musi mieć co najmniej 6 znaków" });
+    }
+
+    const hasloHash = await hashPassword(haslo);
+
+    const updated = await Uzytkownik.findByIdAndUpdate(
+      req.params.id,
+      { hasloHash },
+      { new: true }
+    ).select("-hasloHash");
+
+    if (!updated) return res.status(404).json({ message: "Nie znaleziono użytkownika" });
+
+    res.json({
+      message: "Hasło zmienione pomyślnie",
       user: updated
     });
   } catch (e) {

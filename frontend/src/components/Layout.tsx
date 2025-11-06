@@ -56,7 +56,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     <Box sx={{ display: 'flex' }}>
       <AppBar position="fixed">
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h6"
+            sx={{ flexGrow: 1, cursor: 'pointer', userSelect: 'none' }}
+            onClick={() => navigate('/')}
+          >
             System Zarządzania Klubem Piłkarskim
           </Typography>
           <Button
