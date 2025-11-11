@@ -7,6 +7,46 @@ import { sprawdzRole } from "../middleware/rola.middleware";
 const router = Router();
 
 /**
+ * GET /api/statystyki/filters/available
+ * Zwraca dostępne opcje do filtrowania statystyk
+ */
+router.get("/filters/available", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: AuthRequest, res) => {
+  try {
+    let zawodnicy: any[] = [];
+
+    if (req.user?.rola === "TRENER") {
+      // TRENER widzi tylko zawodników z jego kategorii
+      zawodnicy = await Uzytkownik.find({
+        rola: "ZAWODNIK",
+        kategoria: req.user?.kategoria
+      }).select("kategoria pozycja");
+    } else {
+      // PREZES widzi wszystkich zawodników
+      zawodnicy = await Uzytkownik.find({
+        rola: "ZAWODNIK"
+      }).select("kategoria pozycja");
+    }
+
+    // Pobierz unikalne wartości
+    const kategorie = [...new Set(zawodnicy.map(z => z.kategoria).filter(Boolean))].sort();
+    const pozycje = [...new Set(zawodnicy.map(z => z.pozycja).filter(Boolean))].sort();
+
+    // Pobierz unikalne sezony ze statystyk
+    const statystyki = await Statystyka.find().select("sezon");
+    const sezony = [...new Set(statystyki.map(s => s.sezon).filter(Boolean))].sort().reverse();
+
+    return res.json({
+      kategorie,
+      pozycje,
+      sezony
+    });
+  } catch (e) {
+    console.error("Błąd pobierania filtrów:", e);
+    return res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+/**
  * POST /api/statystyki/:zawodnikId
  * Dodaj / zaktualizuj statystyki zawodnika (PREZES, TRENER)
  * Jeżeli podasz "sezon" w body – trzymamy jedną kartę na sezon (upsert).
@@ -94,28 +134,88 @@ router.get("/:zawodnikId", authMiddleware, async (req, res) => {
 /**
  * GET /api/statystyki
  * Lista wszystkich statystyk (PREZES widzi wszystkie, TRENER widzi dla swojej kategorii)
- * Opcjonalnie ?sezon=2024/25
+ * Query params:
+ *   ?sezon=2024/25 - filtruj po sezonie
+ *   ?kategoria=U19 - filtruj po kategorii
+ *   ?pozycja=BRAMKARZ - filtruj po pozycji
+ *   ?zawodnikId=xxx - filtruj po ID zawodnika
+ *   ?page=1&limit=10 - paginacja
  */
 router.get("/", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: AuthRequest, res) => {
   try {
-    const { sezon } = req.query as { sezon?: string };
+    const { sezon, kategoria, pozycja, zawodnikId, page = 1, limit = 100 } = req.query as any;
     const filter: any = {};
+    
     if (sezon) filter.sezon = sezon;
 
-    // Jeśli TRENER - filtruj po jego kategorii
+    let zawodnikIds: any[] = [];
+
+    // Jeśli TRENER - zawsze filtruj po jego kategorii
     if (req.user?.rola === "TRENER") {
-      // Pobierz ID zawodników z kategorii TRENERA
       const zawodnicy = await Uzytkownik.find({
         rola: "ZAWODNIK",
         kategoria: req.user?.kategoria
       }).select("_id");
       
-      const zawodnikIds = zawodnicy.map(z => z._id);
+      zawodnikIds = zawodnicy.map((z: any) => z._id);
+    } else if (req.user?.rola === "PREZES") {
+      // PREZES - jeśli kategoria podana, filtruj po niej
+      if (kategoria) {
+        const zawodnicy = await Uzytkownik.find({
+          rola: "ZAWODNIK",
+          kategoria: kategoria
+        }).select("_id");
+        
+        zawodnikIds = zawodnicy.map((z: any) => z._id);
+      }
+    }
+
+    // Filtruj po pozycji
+    if (pozycja) {
+      const query: any = {
+        rola: "ZAWODNIK",
+        pozycja: pozycja
+      };
+      if (zawodnikIds.length > 0) {
+        query._id = { $in: zawodnikIds };
+      }
+      
+      const zawodnicy = await Uzytkownik.find(query).select("_id");
+      zawodnikIds = zawodnicy.map((z: any) => z._id);
+    }
+
+    // Filtruj po konkretnym zawodniku
+    if (zawodnikId) {
+      zawodnikIds = [zawodnikId];
+    }
+
+    // Jeśli mamy ograniczenie zawodników, dodaj do filtru
+    if (zawodnikIds.length > 0) {
       filter.zawodnikId = { $in: zawodnikIds };
     }
 
-    const lista = await Statystyka.find(filter).populate("zawodnikId", "imie nazwisko email rola kategoria");
-    return res.json(lista);
+    // Paginacja
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit) || 100));
+    const skip = (pageNum - 1) * limitNum;
+
+    const lista = await Statystyka.find(filter)
+      .populate("zawodnikId", "imie nazwisko email rola kategoria pozycja")
+      .skip(skip)
+      .limit(limitNum)
+      .sort({ createdAt: -1 });
+
+    const total = await Statystyka.countDocuments(filter);
+
+    return res.json({
+      data: lista,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum)
+      }
+    });
   } catch (e) {
     console.error("Błąd listy statystyk:", e);
     return res.status(500).json({ message: "Błąd serwera" });

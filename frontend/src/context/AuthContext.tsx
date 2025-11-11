@@ -20,22 +20,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Initialize from localStorage
   useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    if (savedToken) {
-      setToken(savedToken);
-      // Optionally fetch user data
-      authService.me()
-        .then((res) => {
+    const loadUser = async () => {
+      const savedToken = localStorage.getItem('token');
+      if (savedToken) {
+        setToken(savedToken);
+        try {
+          const res = await authService.me();
           setUser(res.data);
-        })
-        .catch(() => {
+        } catch (err) {
+          console.error('Błąd pobierania danych użytkownika:', err);
           localStorage.removeItem('token');
           setToken(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
+        }
+      }
       setLoading(false);
-    }
+    };
+
+    loadUser();
   }, []);
 
   const login = async (email: string, haslo: string) => {

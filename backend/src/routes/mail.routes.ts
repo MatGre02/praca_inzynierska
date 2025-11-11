@@ -47,27 +47,13 @@ router.post(
       // ZAWODNIK – tylko trener z jego kategorii + prezes
       if (sender.rola === "ZAWODNIK") {
         for (const recipient of recipients) {
-          // ❌ Zawodnik nie może wysłać do innego zawodnika
-          if (recipient.rola === "ZAWODNIK") {
-            return res.status(403).json({
-              message: "Zawodnicy nie mogą wysyłać maili między sobą"
-            });
-          }
+          const isValid = 
+            (recipient.rola === "PREZES") ||
+            (recipient.rola === "TRENER" && recipient.kategoria === sender.kategoria);
 
-          // ❌ Zawodnik nie może wysłać do trenera z innej kategorii
-          if (
-            recipient.rola === "TRENER" &&
-            recipient.kategoria !== sender.kategoria
-          ) {
+          if (!isValid) {
             return res.status(403).json({
-              message: `Możesz wysłać mail tylko do trenera swojej kategorii (${sender.kategoria})`
-            });
-          }
-
-          // ✅ Zawodnik może do PREZES-a
-          if (recipient.rola !== "PREZES" && recipient.rola !== "TRENER") {
-            return res.status(403).json({
-              message: "Nieprawidłowy odbiorca"
+              message: "Zawodnicy mogą wysyłać maile tylko do trenera swojej kategorii lub prezesa"
             });
           }
         }
@@ -76,19 +62,19 @@ router.post(
       // TRENER – zawodnicy z jego kategorii + inni trenerzy + prezes
       if (sender.rola === "TRENER") {
         for (const recipient of recipients) {
-          // ❌ Trener nie może wysłać do zawodnika z innej kategorii
-          if (
-            recipient.rola === "ZAWODNIK" &&
-            recipient.kategoria !== sender.kategoria
-          ) {
+          const senderIdStr = String(sender._id);
+          const recipientIdStr = String(recipient._id);
+          
+          const isValid = 
+            (recipient.rola === "ZAWODNIK" && recipient.kategoria === sender.kategoria) ||
+            (recipient.rola === "TRENER" && recipientIdStr !== senderIdStr) ||
+            (recipient.rola === "PREZES");
+
+          if (!isValid) {
             return res.status(403).json({
-              message: `Możesz wysyłać maile tylko do zawodników z Twojej kategorii (${sender.kategoria})`
+              message: `Trener może wysyłać maile do: zawodników z Twojej kategorii (${sender.kategoria}), innych trenerów i prezesa`
             });
           }
-
-          // ✅ Trener może do innego trenera
-          // ✅ Trener może do PREZES-a
-          // ✅ Trener może do zawodnika z jego kategorii
         }
       }
 
@@ -172,6 +158,76 @@ router.post(
         return res.status(400).json({ message: "Błędne dane", errors: error.flatten() });
       }
       console.error("Błąd wysyłki maila:", error);
+      return res.status(500).json({ message: "Błąd serwera", error: String(error) });
+    }
+  }
+);
+
+/**
+ * GET /api/mail/recipients
+ * Zwraca listę dostępnych odbiorców maili w zależności od roli
+ */
+router.get(
+  "/recipients",
+  authMiddleware,
+  sprawdzRole(["ZAWODNIK", "TRENER", "PREZES"]),
+  async (req: AuthRequest, res) => {
+    try {
+      const sender = await Uzytkownik.findById(req.user?.id);
+      if (!sender) {
+        return res.status(404).json({ message: "Użytkownik nie znaleziony" });
+      }
+
+      let recipients: any[] = [];
+
+      if (sender.rola === "ZAWODNIK") {
+        // Zawodnik może wysyłać do: trenera z jego kategorii + prezes
+        recipients = await Uzytkownik.find({
+          $or: [
+            { rola: "PREZES" },
+            { rola: "TRENER", kategoria: sender.kategoria }
+          ]
+        }).select("_id email imie nazwisko rola kategoria");
+
+      } else if (sender.rola === "TRENER") {
+        // Trener może wysyłać do: zawodników z jego kategorii + WSZYSCY inni trenerzy + prezes
+        recipients = await Uzytkownik.find({
+          $or: [
+            { rola: "ZAWODNIK", kategoria: sender.kategoria },
+            { rola: "TRENER", _id: { $ne: sender._id } }, // Wszyscy trenerzy poza sobą
+            { rola: "PREZES" }
+          ]
+        }).select("_id email imie nazwisko rola kategoria");
+
+      } else if (sender.rola === "PREZES") {
+        // Prezes może wysyłać do wszystkich (poza sobą)
+        recipients = await Uzytkownik.find({
+          _id: { $ne: sender._id }
+        }).select("_id email imie nazwisko rola kategoria");
+      }
+
+      // Sortuj po roli i nazwisku
+      recipients.sort((a, b) => {
+        const rolaOrder = { PREZES: 0, TRENER: 1, ZAWODNIK: 2 };
+        const aOrder = rolaOrder[a.rola as keyof typeof rolaOrder] || 3;
+        const bOrder = rolaOrder[b.rola as keyof typeof rolaOrder] || 3;
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        return (a.nazwisko || "").localeCompare(b.nazwisko || "");
+      });
+
+      return res.status(200).json({
+        message: "Lista dostępnych odbiorców",
+        recipients: recipients.map(r => ({
+          id: r._id,
+          email: r.email,
+          imie: r.imie,
+          nazwisko: r.nazwisko,
+          rola: r.rola,
+          kategoria: r.kategoria
+        }))
+      });
+    } catch (error) {
+      console.error("Błąd pobierania odbiorców:", error);
       return res.status(500).json({ message: "Błąd serwera", error: String(error) });
     }
   }

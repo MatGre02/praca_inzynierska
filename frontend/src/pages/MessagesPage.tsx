@@ -15,7 +15,7 @@ import {
   Chip,
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
-import { adminService, mailService } from '../services/api';
+import { mailService } from '../services/api';
 import { User } from '../types';
 
 const MessagesPage = () => {
@@ -32,51 +32,14 @@ const MessagesPage = () => {
     const fetchRecipients = async () => {
       try {
         setLoading(true);
+        
+        // Użyj nowego endpointa /mail/recipients który zwraca prawidłowo przefiltrowanych odbiorców
+        const response = await mailService.getRecipients();
+        const allRecipients = response.data.recipients;
 
-        if (user?.rola === 'PREZES') {
-          // PREZES widzi wszystkich oprócz siebie
-          const response = await adminService.getUsers();
-          const filtered = response.data.data.filter(
-            (u: User) => (u.id || (u as any)._id) !== (user.id || (user as any)._id)
-          );
-          setRecipients(filtered);
-        } else if (user?.rola === 'TRENER') {
-          // TRENER widzi zawodników swojej kategorii + innych trenerów + PREZES-a (oprócz siebie)
-          const response = await adminService.getUsers();
-          const allUsers = response.data.data;
-          const currentUserId = user.id || (user as any)._id;
-
-          console.log('%c [TRENER DEBUG] Wszystkie użytkownicy:', 'color: #ff6600; font-weight: bold;', allUsers);
-          console.log('%c [TRENER DEBUG] currentUserId:', 'color: #ff6600; font-weight: bold;', currentUserId);
-          console.log('%c [TRENER DEBUG] user.kategoria:', 'color: #ff6600; font-weight: bold;', user.kategoria);
-
-          const filtered = allUsers.filter((u: User) => {
-            // Nie pokazuj siebie
-            if ((u.id || (u as any)._id) === currentUserId) return false;
-            
-            // ZAWODNIK z tej samej kategorii (jeśli kategoria istnieje)
-            if (u.rola === 'ZAWODNIK') {
-              if (user.kategoria && u.kategoria !== user.kategoria) return false;
-              return true;
-            }
-            
-            // TRENER (oprócz siebie, co już sprawdziliśmy wyżej)
-            if (u.rola === 'TRENER') return true;
-            
-            // PREZES
-            if (u.rola === 'PREZES') return true;
-            
-            return false;
-          });
-
-          console.log('%c [TRENER DEBUG] Filtrowana lista:', 'color: #00ff00; font-weight: bold;', filtered);
-          setRecipients(filtered);
-        } else if (user?.rola === 'ZAWODNIK') {
-          // ZAWODNIK widzi trenerów + PREZES-a
-          // Backend sam filtruje dla ZAWODNIKA - zwraca tylko TRENER i PREZES
-          const response = await adminService.getUsers();
-          setRecipients(response.data.data);
-        }
+        console.log('%c [DEBUG] Odbiorcy z /mail/recipients:', 'color: #00ff00; font-weight: bold;', allRecipients);
+        
+        setRecipients(allRecipients);
       } catch (err) {
         console.error('Błąd ładowania odbiorców:', err);
         setError('Nie udało się załadować listy odbiorców');
@@ -102,7 +65,7 @@ const MessagesPage = () => {
       for (const email of selectedRecipients) {
         const recipient = recipients.find((r) => r.email === email);
         if (recipient) {
-          const recipientId = (recipient as any)._id || recipient.id;
+          const recipientId = recipient.id;
           if (recipientId) {
             recipientIds.push(recipientId);
           }
@@ -152,9 +115,9 @@ const MessagesPage = () => {
     }
   };
 
-  const getRecipientRole = (recipient: User): string => {
+  const getRecipientRole = (recipient: User | any): string => {
     if (recipient.rola === 'ZAWODNIK') {
-      return `ZAWODNIK (${recipient.kategoria})`;
+      return `ZAWODNIK (${recipient.kategoria || 'brak'})`;
     }
     return recipient.rola;
   };

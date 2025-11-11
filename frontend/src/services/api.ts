@@ -54,14 +54,16 @@ export const adminService = {
 };
 
 export const statystykiService = {
-  getStats: (zawodnikId?: string) =>
-    client.get('/statystyki', { params: zawodnikId ? { zawodnikId } : {} }),
+  getStats: (params?: any) =>
+    client.get('/statystyki', { params }),
   getStatsByPlayer: (zawodnikId: string) =>
     client.get(`/statystyki/${zawodnikId}`),
   addStats: (zawodnikId: string, data: any) =>
     client.post(`/statystyki/${zawodnikId}`, data),
   updateStats: (statystykaId: string, data: any) =>
     client.patch(`/statystyki/${statystykaId}`, data),
+  getFilters: () =>
+    client.get('/statystyki/filters/available'),
 };
 
 export const wydarzeniaService = {
@@ -80,12 +82,16 @@ export const wydarzeniaService = {
 };
 
 export const squadsService = {
-  getByEvent: (eventId: string) =>
-    client.get(`/squads/${eventId}`),
+  getAll: () =>
+    client.get('/squads'),
+  getById: (id: string) =>
+    client.get(`/squads/${id}`),
   create: (data: any) =>
     client.post('/squads', data),
-  update: (eventId: string, playerIds: string[]) =>
-    client.patch(`/squads/${eventId}`, { playerIds }),
+  update: (id: string, data: any) =>
+    client.patch(`/squads/${id}`, data),
+  delete: (id: string) =>
+    client.delete(`/squads/${id}`),
 };
 
 export const mailService = {
@@ -93,6 +99,8 @@ export const mailService = {
     client.post('/mail/send', { to, subject, html }),
   sendCategory: (category: string, subject: string, html: string) =>
     client.post('/mail/send-category', { category, subject, html }),
+  getRecipients: () =>
+    client.get('/mail/recipients'),
 };
 
 export const reportsService = {

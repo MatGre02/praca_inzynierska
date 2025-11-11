@@ -11,8 +11,8 @@ import HomePage from './pages/HomePage.tsx';
 import EventsPage from './pages/EventsPage.tsx';
 import SquadPage from './pages/SquadPage.tsx';
 import StatsPage from './pages/StatsPage.tsx';
-import MailPage from './pages/MailPage.tsx';
 import AdminPage from './pages/AdminPage.tsx';
+import PlayersPage from './pages/PlayersPage.tsx';
 import ReportsPage from './pages/ReportsPage.tsx';
 import ContactPage from './pages/ContactPage.tsx';
 import AddMemberPage from './pages/AddMemberPage.tsx';
@@ -112,21 +112,21 @@ function App() {
               }
             />
             <Route
-              path="/mail"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <MailPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/admin"
               element={
                 <ProtectedRoute>
                   <Layout>
                     <AdminPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/players-list"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <PlayersPage />
                   </Layout>
                 </ProtectedRoute>
               }

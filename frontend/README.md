@@ -38,7 +38,6 @@ frontend/
 │   │   ├── EventsPage.tsx
 │   │   ├── SquadPage.tsx
 │   │   ├── StatsPage.tsx
-│   │   ├── MailPage.tsx
 │   │   ├── AdminPage.tsx
 │   │   ├── ReportsPage.tsx
 │   │   └── ContactPage.tsx

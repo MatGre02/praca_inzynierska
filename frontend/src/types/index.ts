@@ -51,9 +51,12 @@ export interface Wydarzenie {
 
 // Squad type
 export interface Squad {
-  id: string;
-  eventId: string;
-  playerIds: string[];
+  _id: string;
+  eventId: any; // Popolate Wydarzenie
+  trener: any; // Populate User
+  kategoria: Category;
+  podstawowySkład: User[];
+  rezerwowi: User[];
   createdAt: Date;
   updatedAt: Date;
 }

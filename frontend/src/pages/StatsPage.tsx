@@ -22,6 +22,10 @@ import {
   DialogActions,
   TextField,
   Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon } from '@mui/icons-material';
 import { statystykiService, adminService } from '../services/api';
@@ -44,6 +48,12 @@ interface Statystyka {
   czysteKonta: number;
 }
 
+interface Filters {
+  kategorie: string[];
+  pozycje: string[];
+  sezony: string[];
+}
+
 const StatsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -53,29 +63,55 @@ const StatsPage = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingData, setEditingData] = useState<Partial<Statystyka> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filters, setFilters] = useState<Filters>({ kategorie: [], pozycje: [], sezony: [] });
+  const [selectedFilters, setSelectedFilters] = useState({
+    sezon: '',
+    kategoria: '',
+    pozycja: '',
+  });
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
+    fetchFilters();
     fetchStats();
   }, [user?.rola, user?.kategoria]);
+
+  const fetchFilters = async () => {
+    try {
+      const response = await statystykiService.getFilters();
+      if (response.data) {
+        setFilters(response.data);
+      }
+    } catch (err) {
+      console.error('Błąd pobierania filtrów:', err);
+    }
+  };
 
   const fetchStats = async () => {
     try {
       setLoading(true);
       setError('');
 
-      if (user?.rola === 'PREZES') {
-        // PREZES widzi wszystkie statystyki
-        const response = await statystykiService.getStats();
-        setStats(response.data);
-      } else if (user?.rola === 'TRENER') {
-        // TRENER widzi statystyki zawodników z jego kategorii
-        const response = await statystykiService.getStats();
-        setStats(response.data);
-      } else if (user?.rola === 'ZAWODNIK') {
+      const params: any = {};
+      if (selectedFilters.sezon) params.sezon = selectedFilters.sezon;
+      if (selectedFilters.kategoria) params.kategoria = selectedFilters.kategoria;
+      if (selectedFilters.pozycja) params.pozycja = selectedFilters.pozycja;
+
+      if (user?.rola === 'ZAWODNIK') {
         // ZAWODNIK widzi swoje statystyki
         const response = await statystykiService.getStatsByPlayer(user.id || (user as any)._id);
         if (response.data && Object.keys(response.data).length > 0) {
           setStats([response.data]);
+        } else {
+          setStats([]);
+        }
+      } else {
+        // PREZES i TRENER
+        const response = await statystykiService.getStats(params);
+        if (response.data?.data) {
+          setStats(response.data.data);
+        } else if (Array.isArray(response.data)) {
+          setStats(response.data);
         } else {
           setStats([]);
         }
@@ -88,8 +124,75 @@ const StatsPage = () => {
     }
   };
 
+  const handleFilterChange = (filterName: string, value: string) => {
+    setSelectedFilters(prev => ({
+      ...prev,
+      [filterName]: value
+    }));
+  };
+
+  const handleApplyFilters = () => {
+    fetchStats();
+  };
+
+  const handleClearFilters = async () => {
+    // Resetuj filtry i search
+    setSelectedFilters({
+      sezon: '',
+      kategoria: '',
+      pozycja: '',
+    });
+    setSearchQuery('');
+    
+    // Pobierz wszystkie statystyki bez filtrów
+    try {
+      setLoading(true);
+      setError('');
+
+      if (user?.rola === 'ZAWODNIK') {
+        const response = await statystykiService.getStatsByPlayer(user.id || (user as any)._id);
+        if (response.data && Object.keys(response.data).length > 0) {
+          setStats([response.data]);
+        } else {
+          setStats([]);
+        }
+      } else {
+        // PREZES i TRENER - bez filtrów
+        const response = await statystykiService.getStats({});
+        if (response.data?.data) {
+          setStats(response.data.data);
+        } else if (Array.isArray(response.data)) {
+          setStats(response.data);
+        } else {
+          setStats([]);
+        }
+      }
+    } catch (err: any) {
+      setError('Błąd pobierania statystyk');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const canAddStats = user?.rola === 'PREZES' || user?.rola === 'TRENER';
   const canEditStats = user?.rola === 'PREZES' || user?.rola === 'TRENER';
+
+  // Filtrowanie po tekście (imię/nazwisko)
+  const getFilteredStats = () => {
+    if (!searchQuery.trim()) {
+      return stats;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return stats.filter(stat => {
+      if (typeof stat.zawodnikId === 'string') return false;
+      const fullName = `${stat.zawodnikId.imie} ${stat.zawodnikId.nazwisko}`.toLowerCase();
+      return fullName.includes(query);
+    });
+  };
+
+  const filteredStats = getFilteredStats();
 
   const handleEditClick = async (stat: Statystyka) => {
     try {
@@ -209,6 +312,88 @@ const StatsPage = () => {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
+      {/* Panel filtrowania */}
+      {(user?.rola === 'PREZES' || user?.rola === 'TRENER') && (
+        <Paper sx={{ p: 3, mb: 3, backgroundColor: '#1e1e1e' }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+            🔍 Filtry
+          </Typography>
+          <Grid container spacing={2}>
+            {filters.sezony.length > 0 && (
+              <Grid item xs={12} sm={6} md={3}>
+                <FormControl fullWidth>
+                  <InputLabel>Sezon</InputLabel>
+                  <Select
+                    value={selectedFilters.sezon}
+                    onChange={(e) => handleFilterChange('sezon', e.target.value)}
+                    label="Sezon"
+                  >
+                    <MenuItem value="">Wszystkie</MenuItem>
+                    {filters.sezony.map(sezon => (
+                      <MenuItem key={sezon} value={sezon}>{sezon}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+
+            {user?.rola === 'PREZES' && filters.kategorie.length > 0 && (
+              <Grid item xs={12} sm={6} md={3}>
+                <FormControl fullWidth>
+                  <InputLabel>Kategoria</InputLabel>
+                  <Select
+                    value={selectedFilters.kategoria}
+                    onChange={(e) => handleFilterChange('kategoria', e.target.value)}
+                    label="Kategoria"
+                  >
+                    <MenuItem value="">Wszystkie</MenuItem>
+                    {filters.kategorie.map(kategoria => (
+                      <MenuItem key={kategoria} value={kategoria}>{kategoria}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+
+            {filters.pozycje.length > 0 && (
+              <Grid item xs={12} sm={6} md={3}>
+                <FormControl fullWidth>
+                  <InputLabel>Pozycja</InputLabel>
+                  <Select
+                    value={selectedFilters.pozycja}
+                    onChange={(e) => handleFilterChange('pozycja', e.target.value)}
+                    label="Pozycja"
+                  >
+                    <MenuItem value="">Wszystkie</MenuItem>
+                    {filters.pozycje.map(pozycja => (
+                      <MenuItem key={pozycja} value={pozycja}>{pozycja}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+
+            <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleApplyFilters}
+                sx={{ flex: 1, height: '56px' }}
+              >
+                Zastosuj
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleClearFilters}
+                sx={{ flex: 1, height: '56px' }}
+              >
+                Wyczyść
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
+      )}
+
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
@@ -221,6 +406,23 @@ const StatsPage = () => {
         </Alert>
       ) : (
         <>
+          {(user?.rola === 'PREZES' || user?.rola === 'TRENER') && (
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                fullWidth
+                placeholder="🔍 Szukaj zawodnika po imieniu lub nazwisku..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                variant="outlined"
+                size="small"
+              />
+              {filteredStats.length > 0 && filteredStats.length < stats.length && (
+                <Typography variant="caption" sx={{ color: '#666', mt: 1, display: 'block' }}>
+                  Znaleziono {filteredStats.length} wyników
+                </Typography>
+              )}
+            </Box>
+          )}
         <TableContainer component={Paper}>
           <Table sx={{ minWidth: 650 }}>
             <TableHead sx={{ backgroundColor: '#1976d2' }}>
@@ -255,7 +457,7 @@ const StatsPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {stats.map((stat) => (
+              {filteredStats.map((stat) => (
                 <TableRow key={stat._id} hover>
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>

@@ -25,7 +25,7 @@ app.use(express.json());
 // Rate limiting - domyślny limit dla wszystkich requestów
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minut
-  max: 1000, // max 100 requestów na IP
+  max: 10000, // max 100 requestów na IP
   message: "Zbyt wiele żądań z tego IP, spróbuj później",
   standardHeaders: true, // zwróć info o limitzie w `RateLimit-*` headerach
   legacyHeaders: false // wyłącz `X-RateLimit-*` headery
@@ -34,7 +34,7 @@ const generalLimiter = rateLimit({
 // Rate limiting - ostrzejszy dla logowania/rejestracji
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minut
-  max: 1000, // max 100 prób na IP
+  max: 10000, // max 100 prób na IP
   message: "Zbyt wiele prób logowania/rejestracji, spróbuj za 15 minut",
   standardHeaders: true,
   legacyHeaders: false,
@@ -47,7 +47,7 @@ const authLimiter = rateLimit({
 // Rate limiting - dla wysyłania maili
 const mailLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 godzina
-  max: 10, // max 10 maili na godzinę z jednego IP
+  max: 1000, // max 10 maili na godzinę z jednego IP
   message: "Zbyt wiele wysłanych maili, spróbuj później",
   standardHeaders: true,
   legacyHeaders: false
