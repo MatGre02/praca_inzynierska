@@ -1,24 +1,33 @@
-# Frontend Dockerfile
+# Frontend Dockerfile - Multi-stage build
 FROM node:18-alpine as builder
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm ci
+# Zainstaluj dependencies
+COPY package.json ./
+RUN npm install
 
+# Skopiuj kod źródłowy i builduj
 COPY . .
 RUN npm run build
 
-# Production stage
-FROM node:18-alpine
+# Production stage - nginx
+FROM nginx:alpine
 
-WORKDIR /app
+# Skopiuj nginx config
+RUN rm /etc/nginx/conf.d/default.conf
 
-# Install serve to run the app
-RUN npm install -g serve
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY --from=builder /app/dist ./dist
+# Skopiuj zbudowaną aplikację
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-EXPOSE 3000
+# Expose port
+EXPOSE 80
 
-CMD ["serve", "-s", "dist", "-l", "3000"]
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+
+# Uruchom nginx
+CMD ["nginx", "-g", "daemon off;"]

@@ -24,3 +24,27 @@ dist/
 .env.*.local
 *.log
 .vite/
+
+# Docker
+.docker
+docker-volumes
+mongo_data
+mongo_config
+
+# IDE
+*.swp
+*.swo
+*~
+.project
+.classpath
+*.c9/
+
+# OS
+.AppleDouble
+.LSOverride
+*.sublime-workspace
+
+# Environment
+.env
+.env.production
+.env.development
