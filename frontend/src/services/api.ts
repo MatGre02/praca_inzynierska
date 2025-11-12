@@ -56,8 +56,8 @@ export const adminService = {
 export const statystykiService = {
   getStats: (params?: any) =>
     client.get('/statystyki', { params }),
-  getStatsByPlayer: (zawodnikId: string) =>
-    client.get(`/statystyki/${zawodnikId}`),
+  getStatsByPlayer: (zawodnikId: string, params?: any) =>
+    client.get(`/statystyki/${zawodnikId}`, { params }),
   addStats: (zawodnikId: string, data: any) =>
     client.post(`/statystyki/${zawodnikId}`, data),
   updateStats: (statystykaId: string, data: any) =>

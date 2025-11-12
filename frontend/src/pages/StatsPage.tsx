@@ -98,9 +98,13 @@ const StatsPage = () => {
       if (selectedFilters.pozycja) params.pozycja = selectedFilters.pozycja;
 
       if (user?.rola === 'ZAWODNIK') {
-        // ZAWODNIK widzi swoje statystyki
-        const response = await statystykiService.getStatsByPlayer(user.id || (user as any)._id);
-        if (response.data && Object.keys(response.data).length > 0) {
+        // ZAWODNIK widzi swoje statystyki z filtrami
+        const response = await statystykiService.getStatsByPlayer(user._id || user.id || '', params);
+        if (response.data && Array.isArray(response.data)) {
+          // Backend zwraca array
+          setStats(response.data);
+        } else if (response.data && Object.keys(response.data).length > 0) {
+          // Backend zwraca object
           setStats([response.data]);
         } else {
           setStats([]);
@@ -150,8 +154,10 @@ const StatsPage = () => {
       setError('');
 
       if (user?.rola === 'ZAWODNIK') {
-        const response = await statystykiService.getStatsByPlayer(user.id || (user as any)._id);
-        if (response.data && Object.keys(response.data).length > 0) {
+        const response = await statystykiService.getStatsByPlayer(user._id || user.id || '');
+        if (response.data && Array.isArray(response.data)) {
+          setStats(response.data);
+        } else if (response.data && Object.keys(response.data).length > 0) {
           setStats([response.data]);
         } else {
           setStats([]);
@@ -391,6 +397,55 @@ const StatsPage = () => {
               </Button>
             </Grid>
           </Grid>
+        </Paper>
+      )}
+
+      {/* Panel filtrowania dla ZAWODNIKA */}
+      {user?.rola === 'ZAWODNIK' && filters.sezony.length > 0 && (
+        <Paper sx={{ p: 3, mb: 3, backgroundColor: '#1e1e1e' }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+            🔍 Filtry Moich Statystyk
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Sezon</InputLabel>
+                <Select
+                  value={selectedFilters.sezon}
+                  onChange={(e) => handleFilterChange('sezon', e.target.value)}
+                  label="Sezon"
+                >
+                  <MenuItem value="">Wszystkie sezony</MenuItem>
+                  {filters.sezony.map(sezon => (
+                    <MenuItem key={sezon} value={sezon}>{sezon}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6} sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleApplyFilters}
+                sx={{ flex: 1 }}
+              >
+                Pokaż
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleClearFilters}
+                sx={{ flex: 1 }}
+              >
+                Wyczyść
+              </Button>
+            </Grid>
+          </Grid>
+          {user?.kategoria && (
+            <Typography variant="body2" sx={{ mt: 2, color: '#90caf9' }}>
+              📋 Twoja kategoria: <strong>{user.kategoria}</strong>
+            </Typography>
+          )}
         </Paper>
       )}
 

@@ -10,7 +10,7 @@ const router = Router();
  * GET /api/statystyki/filters/available
  * Zwraca dostępne opcje do filtrowania statystyk
  */
-router.get("/filters/available", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: AuthRequest, res) => {
+router.get("/filters/available", authMiddleware, async (req: AuthRequest, res) => {
   try {
     let zawodnicy: any[] = [];
 
@@ -20,12 +20,13 @@ router.get("/filters/available", authMiddleware, sprawdzRole(["PREZES", "TRENER"
         rola: "ZAWODNIK",
         kategoria: req.user?.kategoria
       }).select("kategoria pozycja");
-    } else {
+    } else if (req.user?.rola === "PREZES") {
       // PREZES widzi wszystkich zawodników
       zawodnicy = await Uzytkownik.find({
         rola: "ZAWODNIK"
       }).select("kategoria pozycja");
     }
+    // ZAWODNIK nie potrzebuje zawodników do filtrów
 
     // Pobierz unikalne wartości
     const kategorie = [...new Set(zawodnicy.map(z => z.kategoria).filter(Boolean))].sort();

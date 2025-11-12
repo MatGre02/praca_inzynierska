@@ -46,7 +46,7 @@ const HomePage = () => {
     {
       id: 'stats',
       title: 'Statystyki',
-      description: 'Przeglądaj statystyki wszystkich zawodników - bramki, karty, minuty rozegrane',
+      description: 'Przeglądaj statystyki wszystkich zawodników - bramki, kartki, minuty rozegrane',
       icon: <BarChartIcon sx={{ fontSize: 40 }} />,
       color: '#4CAF50',
       path: '/stats',
@@ -62,7 +62,7 @@ const HomePage = () => {
     {
       id: 'squad',
       title: 'Kadra Meczowa',
-      description: 'Wybierz 18 zawodników (11 na boisku + 7 rezerwowych) do kadry meczowej',
+      description: 'Kadra meczowa - podgląd wszystkich kadr w klubie',
       icon: <GroupsIcon sx={{ fontSize: 40 }} />,
       color: '#FF9800',
       path: '/squad',
@@ -129,7 +129,7 @@ const HomePage = () => {
     {
       id: 'calendar',
       title: 'Kalendarz',
-      description: 'Przeglądaj kalendarz zdarzeń, treningów i meczów',
+      description: 'Zarządzaj kalendarzem zdarzeń, treningami i meczami dla Twojej kategorii',
       icon: <EventIcon sx={{ fontSize: 40 }} />,
       color: '#2196F3',
       path: '/events',
@@ -137,7 +137,7 @@ const HomePage = () => {
     {
       id: 'squad',
       title: 'Kadra Meczowa',
-      description: 'Wybierz 18 zawodników do kadry meczowej',
+      description: 'Wybierz 18 zawodników do kadry meczowej z Twojej kategorii',
       icon: <GroupsIcon sx={{ fontSize: 40 }} />,
       color: '#FF9800',
       path: '/squad',
