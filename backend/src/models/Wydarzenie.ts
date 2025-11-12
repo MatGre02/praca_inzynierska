@@ -23,10 +23,10 @@ export interface IWydarzenie extends Document {
   data: Date;
   dataKonca?: Date;
   lokalizacja?: string;
-  categoria: Categoria;                         // kategoria wiekowa
-  utworzyl: mongoose.Types.ObjectId;           // ref do Uzytkownik (prezes/trener)
-  uczestnicy: IUczestnik[];                     // RSVP - tylko dla TRENING
-  reminderSent?: boolean;                       // flaga dla crona
+  categoria: Categoria;                         
+  utworzyl: mongoose.Types.ObjectId;           
+  uczestnicy: IUczestnik[];                     
+  reminderSent?: boolean;                       
 }
 
 const UczestnikSchema = new Schema<IUczestnik>({

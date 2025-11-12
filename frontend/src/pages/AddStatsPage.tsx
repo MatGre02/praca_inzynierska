@@ -59,7 +59,6 @@ const AddStatsPage = () => {
     czysteKonta: 0,
   });
 
-  // Pobierz zawodników
   useEffect(() => {
     const fetchZawodnicy = async () => {
       try {
@@ -67,15 +66,12 @@ const AddStatsPage = () => {
         const response = await adminService.getUsers();
         const allUsers = response.data.data || response.data;
         
-        // Filtruj zawodników
         if (user?.rola === 'TRENER') {
-          // TRENER widzi tylko zawodników z jego kategorii
           const filtered = allUsers.filter(
             (u: User) => u.rola === 'ZAWODNIK' && u.kategoria === user.kategoria
           );
           setZawodnicy(filtered);
         } else if (user?.rola === 'PREZES') {
-          // PREZES widzi wszystkich zawodników
           const filtered = allUsers.filter((u: User) => u.rola === 'ZAWODNIK');
           setZawodnicy(filtered);
         }
@@ -98,7 +94,6 @@ const AddStatsPage = () => {
     });
   };
 
-  // Pobierz wybranego zawodnika - pobierz aktualne dane z API gdy zmienisz wybór
   useEffect(() => {
     const fetchZawodnikData = async () => {
       if (!formData.zawodnikId) {
@@ -110,7 +105,6 @@ const AddStatsPage = () => {
         const response = await adminService.getUserById(formData.zawodnikId);
         setSelectedZawodnik(response.data);
       } catch (err) {
-        // Fallback - użyj z listy
         const found = zawodnicy.find(
           (z) => (z.id || z._id) === formData.zawodnikId
         );
@@ -159,7 +153,6 @@ const AddStatsPage = () => {
         `✅ Statystyki dla ${selectedZawodnik?.imie} ${selectedZawodnik?.nazwisko} zostały dodane!`
       );
 
-      // Reset formularza
       setFormData({
         zawodnikId: '',
         sezon: new Date().getFullYear() + '/' + ((new Date().getFullYear() + 1) % 100),
@@ -171,7 +164,6 @@ const AddStatsPage = () => {
         czysteKonta: 0,
       });
 
-      // Redirect do StatsPage po 2 sekundach
       setTimeout(() => navigate('/stats'), 2000);
     } catch (err: any) {
       setError(`❌ Błąd: ${err.response?.data?.message || err.message}`);
@@ -208,7 +200,6 @@ const AddStatsPage = () => {
             </Box>
           ) : (
             <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {/* Zawodnik - Autocomplete */}
               <Autocomplete
                 options={zawodnicy}
                 getOptionLabel={(option) =>
@@ -225,7 +216,6 @@ const AddStatsPage = () => {
                     zawodnikId: newZawodnikId as string,
                   };
                   
-                  // Jeśli nowy zawodnik nie jest bramkarzem, resetuj czyste konta
                   if (newValue?.pozycja !== 'BRAMKARZ') {
                     newFormData.czysteKonta = 0;
                   }
@@ -246,7 +236,6 @@ const AddStatsPage = () => {
                 }}
               />
 
-              {/* Sezon */}
               <TextField
                 label="Sezon"
                 name="sezon"
@@ -260,9 +249,7 @@ const AddStatsPage = () => {
                 📋 Dane Statystyczne
               </Typography>
 
-              {/* Grid z polami liczb */}
               <Grid container spacing={2}>
-                {/* Żółte kartki */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="Żółte Kartki"
@@ -275,7 +262,6 @@ const AddStatsPage = () => {
                   />
                 </Grid>
 
-                {/* Czerwone kartki */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="Czerwone Kartki"
@@ -288,7 +274,6 @@ const AddStatsPage = () => {
                   />
                 </Grid>
 
-                {/* Rozegrane minuty */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="Rozegrane Minuty"
@@ -301,7 +286,6 @@ const AddStatsPage = () => {
                   />
                 </Grid>
 
-                {/* Strzelone bramki */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="Strzelone Bramki"
@@ -314,7 +298,6 @@ const AddStatsPage = () => {
                   />
                 </Grid>
 
-                {/* Odbyte treningi */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="Odbyte Treningi"
@@ -327,7 +310,6 @@ const AddStatsPage = () => {
                   />
                 </Grid>
 
-                {/* Czyste konta (dla bramkarza) */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="Czyste Konta (bramkarz)"
@@ -343,7 +325,6 @@ const AddStatsPage = () => {
                 </Grid>
               </Grid>
 
-              {/* Przyciski */}
               <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
                 <Button
                   type="submit"

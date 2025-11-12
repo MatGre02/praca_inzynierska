@@ -1,14 +1,14 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IStatystyka extends Document {
-  zawodnikId: mongoose.Types.ObjectId;  // ref do Uzytkownik
-  sezon?: string;                        // opcjonalnie (np. 2024/25)
+  zawodnikId: mongoose.Types.ObjectId;  
+  sezon?: string;                        
   zolteKartki: number;
   czerwoneKartki: number;
   rozegraneMinuty: number;
   strzeloneBramki: number;
   odbytychTreningow: number;
-  czysteKonta?: number;                  // dla bramkarza
+  czysteKonta?: number;                 
 }
 
 const StatystykaSchema = new Schema<IStatystyka>(
@@ -25,7 +25,6 @@ const StatystykaSchema = new Schema<IStatystyka>(
   { timestamps: true }
 );
 
-// Jedna karta statystyk na zawodnika na sezon (jeśli podasz sezon)
 StatystykaSchema.index({ zawodnikId: 1, sezon: 1 }, { unique: true, partialFilterExpression: { sezon: { $exists: true } } });
 
 export const Statystyka = mongoose.model<IStatystyka>("Statystyka", StatystykaSchema);

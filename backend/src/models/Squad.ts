@@ -1,11 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface ISquad extends Document {
-  title: string;                              // tytuł kadry (np. "Mecz z Legią")
-  startingEleven: mongoose.Types.ObjectId[];  // 11 zawodników na boisku
-  bench: mongoose.Types.ObjectId[];           // 7 rezerwowych
-  categoria: string;                           // kategoria wiekowa
-  createdBy: mongoose.Types.ObjectId;         // ref do User (trener)
+  title: string;                              
+  startingEleven: mongoose.Types.ObjectId[];  
+  bench: mongoose.Types.ObjectId[];           
+  categoria: string;                           
+  createdBy: mongoose.Types.ObjectId;         
   createdAt: Date;
   updatedAt: Date;
 }

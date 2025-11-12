@@ -28,7 +28,6 @@ import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { squadsService, adminService } from '../services/api';
 
-// Inicjalizacja pdfMake
 if ((pdfFonts as any).pdfMake) {
   (pdfMake as any).vfs = (pdfFonts as any).pdfMake.vfs;
 }
@@ -69,14 +68,11 @@ const SquadPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  // Pobierz zawodników i kadry przy zalogowaniu
   useEffect(() => {
     fetchAvailablePlayers();
-    // ZAWODNIK i TRENER powinni widzieć kadry
     if (user?.rola === 'ZAWODNIK' || user?.rola === 'TRENER') {
       fetchUserSquads();
     }
-    // PREZES widzi wszystkie kadry
     if (user?.rola === 'PREZES') {
       fetchUserSquads();
     }
@@ -100,7 +96,6 @@ const SquadPage = () => {
       const response = await adminService.getUsers({ rola: 'ZAWODNIK' });
       let players = Array.isArray(response.data) ? response.data : response.data?.data || [];
 
-      // Filtruj zawodników z kategorii trenera
       if (user?.rola === 'TRENER') {
         players = players.filter((p: any) => p.kategoria === user.kategoria);
       }
@@ -269,7 +264,6 @@ const SquadPage = () => {
     (pdfMake as any).createPdf(docDefinition).download(fileName);
   };
 
-  // ZAWODNIK - view only
   if (user?.rola === 'ZAWODNIK') {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -336,7 +330,6 @@ const SquadPage = () => {
     );
   }
 
-  // PREZES - view only all squads
   if (user?.rola === 'PREZES') {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -390,7 +383,6 @@ const SquadPage = () => {
     );
   }
 
-  // TRENER - full management
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ mb: 3 }}>
@@ -404,7 +396,6 @@ const SquadPage = () => {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      {/* Formularz tworzenia nowej kadry */}
       {!isCreating ? (
         <Paper sx={{ p: 3, mb: 3 }}>
           <Button
@@ -434,7 +425,6 @@ const SquadPage = () => {
           </Box>
 
           <Grid container spacing={3}>
-            {/* Pierwsza jedenastka */}
             <Grid item xs={12} md={6}>
               <Paper sx={{ p: 2, backgroundColor: '#1e1e1e' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -480,7 +470,6 @@ const SquadPage = () => {
               </Paper>
             </Grid>
 
-            {/* Ławka rezerwowych */}
             <Grid item xs={12} md={6}>
               <Paper sx={{ p: 2, backgroundColor: '#1e1e1e' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -527,7 +516,6 @@ const SquadPage = () => {
             </Grid>
           </Grid>
 
-          {/* Przyciski akcji */}
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
             <Button
               variant="outlined"
@@ -554,7 +542,6 @@ const SquadPage = () => {
         </Paper>
       )}
 
-      {/* Lista istniejących kadr */}
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
@@ -609,7 +596,6 @@ const SquadPage = () => {
         </Alert>
       )}
 
-      {/* Dialog wyboru zawodników */}
       <Dialog
         open={openPlayersDialog}
         onClose={() => setOpenPlayersDialog(false)}

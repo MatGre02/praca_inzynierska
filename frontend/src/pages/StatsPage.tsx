@@ -98,19 +98,15 @@ const StatsPage = () => {
       if (selectedFilters.pozycja) params.pozycja = selectedFilters.pozycja;
 
       if (user?.rola === 'ZAWODNIK') {
-        // ZAWODNIK widzi swoje statystyki z filtrami
         const response = await statystykiService.getStatsByPlayer(user._id || user.id || '', params);
         if (response.data && Array.isArray(response.data)) {
-          // Backend zwraca array
           setStats(response.data);
         } else if (response.data && Object.keys(response.data).length > 0) {
-          // Backend zwraca object
           setStats([response.data]);
         } else {
           setStats([]);
         }
       } else {
-        // PREZES i TRENER
         const response = await statystykiService.getStats(params);
         if (response.data?.data) {
           setStats(response.data.data);
@@ -140,7 +136,6 @@ const StatsPage = () => {
   };
 
   const handleClearFilters = async () => {
-    // Resetuj filtry i search
     setSelectedFilters({
       sezon: '',
       kategoria: '',
@@ -148,7 +143,6 @@ const StatsPage = () => {
     });
     setSearchQuery('');
     
-    // Pobierz wszystkie statystyki bez filtrów
     try {
       setLoading(true);
       setError('');
@@ -163,7 +157,6 @@ const StatsPage = () => {
           setStats([]);
         }
       } else {
-        // PREZES i TRENER - bez filtrów
         const response = await statystykiService.getStats({});
         if (response.data?.data) {
           setStats(response.data.data);
@@ -184,7 +177,6 @@ const StatsPage = () => {
   const canAddStats = user?.rola === 'PREZES' || user?.rola === 'TRENER';
   const canEditStats = user?.rola === 'PREZES' || user?.rola === 'TRENER';
 
-  // Filtrowanie po tekście (imię/nazwisko)
   const getFilteredStats = () => {
     if (!searchQuery.trim()) {
       return stats;
@@ -202,12 +194,10 @@ const StatsPage = () => {
 
   const handleEditClick = async (stat: Statystyka) => {
     try {
-      // Pobierz aktualne dane zawodnika z serwera aby mieć najnowszą pozycję
       const zawodnikResponse = await adminService.getUserById(
         typeof stat.zawodnikId === 'string' ? stat.zawodnikId : stat.zawodnikId._id
       );
       
-      // Merge aktualne dane zawodnika z danymi statystyki
       const zawodnikAtualny = zawodnikResponse.data;
       const updatedZawodnikData = {
         ...stat.zawodnikId,
@@ -227,7 +217,6 @@ const StatsPage = () => {
       });
     } catch (err) {
       console.error('Błąd podczas pobierania danych zawodnika:', err);
-      // Fallback - użyj starych danych
       setEditingId(stat._id);
       setEditingData({
         _id: stat._id,
@@ -262,10 +251,8 @@ const StatsPage = () => {
         czysteKonta: editingData.czysteKonta,
       });
 
-      // Odśwież statystyki i zaktualizuj dane zawodnika
       const updatedStats = stats.map((stat) => {
         if (stat._id === editingId) {
-          // Zaktualizuj stat z nowymi danymi
           return {
             ...stat,
             zolteKartki: editingData.zolteKartki || stat.zolteKartki,
@@ -274,7 +261,6 @@ const StatsPage = () => {
             strzeloneBramki: editingData.strzeloneBramki || stat.strzeloneBramki,
             odbytychTreningow: editingData.odbytychTreningow || stat.odbytychTreningow,
             czysteKonta: editingData.czysteKonta || stat.czysteKonta,
-            // Zawodnik już ma aktualne dane z editingData
             zawodnikId: (editingData.zawodnikId || stat.zawodnikId) as any,
           };
         }
@@ -318,7 +304,6 @@ const StatsPage = () => {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      {/* Panel filtrowania */}
       {(user?.rola === 'PREZES' || user?.rola === 'TRENER') && (
         <Paper sx={{ p: 3, mb: 3, backgroundColor: '#1e1e1e' }}>
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
@@ -400,7 +385,6 @@ const StatsPage = () => {
         </Paper>
       )}
 
-      {/* Panel filtrowania dla ZAWODNIKA */}
       {user?.rola === 'ZAWODNIK' && filters.sezony.length > 0 && (
         <Paper sx={{ p: 3, mb: 3, backgroundColor: '#1e1e1e' }}>
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
@@ -500,7 +484,6 @@ const StatsPage = () => {
                 <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold' }}>
                   🏋️ Treningi
                 </TableCell>
-                {/* Kolumna czystych kont - widoczna dla wszystkich, ale zawartość zależy od pozycji */}
                 <TableCell align="center" sx={{ color: 'white', fontWeight: 'bold' }}>
                   🧤 Czyste Konta
                 </TableCell>
@@ -561,7 +544,6 @@ const StatsPage = () => {
                     {stat.strzeloneBramki}
                   </TableCell>
                   <TableCell align="center">{stat.odbytychTreningow}</TableCell>
-                  {/* Czyste konta - widoczne tylko dla bramkarzy LUB jeśli jest jakaś wartość */}
                   <TableCell align="center" sx={{ fontWeight: 'bold', color: '#90caf9' }}>
                     {(typeof stat.zawodnikId !== 'string' && isBramkarz(stat.zawodnikId.pozycja)) || stat.czysteKonta > 0
                       ? stat.czysteKonta
@@ -586,7 +568,6 @@ const StatsPage = () => {
           </Table>
         </TableContainer>
 
-        {/* Modal edycji */}
         <Dialog open={editingId !== null} onClose={handleCancel} maxWidth="sm" fullWidth>
           <DialogTitle>📝 Edytuj Statystyki</DialogTitle>
           <DialogContent sx={{ pt: 2 }}>

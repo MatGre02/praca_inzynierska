@@ -35,7 +35,6 @@ const EventsPage = () => {
       const response = await wydarzeniaService.getAll();
       const responseData = response.data;
       
-      // Backend zwraca { total, limit, skip, data: [...] }
       const eventsArray = Array.isArray(responseData) ? responseData : (responseData?.data || []);
       
       const formattedEvents = eventsArray.map((event: any) => ({
@@ -73,10 +72,8 @@ const EventsPage = () => {
       };
       
       if (editingId) {
-        // Edycja
         await wydarzeniaService.update(editingId, payload);
       } else {
-        // Tworzenie
         await wydarzeniaService.create(payload);
       }
       
@@ -90,11 +87,9 @@ const EventsPage = () => {
   };
 
   const handleSelectEvent = (event: any) => {
-    // Wczytaj świeże dane z backendu aby mieć zawsze aktualne uczestnicy
     const loadEventDetails = async () => {
       try {
         const response = await wydarzeniaService.getById(event.resource._id);
-        // getById zwraca bezpośrednio Ereignis object w response.data
         setSelectedEvent(response.data);
         setShowDetails(true);
       } catch (error) {
@@ -110,18 +105,15 @@ const EventsPage = () => {
     try {
       const response = await wydarzeniaService.submitRSVP(eventId, wezmieUdzial);
       
-      // Backend zwraca { message, status, data: populatedEvent }
       const eventData = response.data?.data || response.data;
       
       setSelectedEvent(eventData);
-      // Zamknij i otwórz dialog ponownie aby React re-renderował
       setShowDetails(false);
       setTimeout(() => {
         setSelectedEvent(eventData);
         setShowDetails(true);
       }, 100);
       
-      // Odśwież listę eventów w kalendarzu
       await loadEvents();
     } catch (error: any) {
       console.error('Błąd RSVP:', error);
@@ -299,7 +291,6 @@ const EventsPage = () => {
               {(() => {
                 const userId = user?._id || user?.id;
                 
-                // Szukaj zawodnika w tablicy uczestnicy
                 const userParticipant = selectedEvent.uczestnicy?.find((u: any) => {
                   const uczestnikId = typeof u.zawodnik === 'object' ? u.zawodnik._id : u.zawodnik;
                   return String(uczestnikId) === String(userId);

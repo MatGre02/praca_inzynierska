@@ -9,7 +9,6 @@ const ContactPage = () => {
           Kontakt i Informacje o Klubie
         </Typography>
 
-        {/* Dane Klubu */}
         <Box sx={{ mb: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 3 }}>
             <LocationIcon sx={{ mr: 2, color: 'primary.main', mt: 0.5, fontSize: 28 }} />
@@ -48,7 +47,6 @@ const ContactPage = () => {
           </Box>
         </Box>
 
-        {/* Mapka */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
             Lokalizacja na Mapie
@@ -71,7 +69,6 @@ const ContactPage = () => {
           </Box>
         </Box>
 
-        {/* Prezes */}
         <Box sx={{ borderTop: '1px solid #444', pt: 3, mb: 3 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
             Prezes Klubu

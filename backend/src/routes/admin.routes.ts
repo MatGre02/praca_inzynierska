@@ -13,7 +13,6 @@ const router = Router();
  */
 router.get("/uzytkownicy", authMiddleware, async (req: any, res) => {
   try {
-    // Autoryzacja - wszyscy zalogowani mogą pobierać użytkowników
     if (!req.user?.rola) {
       return res.status(403).json({ message: "Dostęp zabroniony" });
     }
@@ -22,33 +21,26 @@ router.get("/uzytkownicy", authMiddleware, async (req: any, res) => {
 
     let filter: any = {};
 
-    // Obsługiwanie różnych ról
     if (req.user?.rola === "PREZES") {
-      // PREZES widzi wszystkich
       if (role) filter.rola = role;
       if (category) filter.kategoria = category;
       if (position) filter.pozycja = position;
     } else if (req.user?.rola === "ZAWODNIK") {
-      // ZAWODNIK widzi tylko trenerów i PREZES-a
       filter.rola = { $in: ["TRENER", "PREZES"] };
     } else if (req.user?.rola === "TRENER") {
-      // TRENER widzi zawodników z jego kategorii
       filter.rola = "ZAWODNIK";
       filter.kategoria = req.user?.kategoria;
     }
 
-    // Paginacja
     const limitNum = Math.min(parseInt(limit as string) || 100, 100);
     const skipNum = parseInt(skip as string) || 0;
 
-    // Pobieranie danych
     const users = await Uzytkownik.find(filter)
       .select("-hasloHash -resetTokenHash -resetTokenExp")
       .limit(limitNum)
       .skip(skipNum)
       .sort({ createdAt: -1 });
 
-    // Liczba całkowita
     const total = await Uzytkownik.countDocuments(filter);
 
     res.json({
@@ -73,7 +65,6 @@ router.post("/uzytkownicy", authMiddleware, tylkoPrezes, async (req, res) => {
     const istnieje = await Uzytkownik.findOne({ email });
     if (istnieje) return res.status(409).json({ message: "Użytkownik już istnieje" });
 
-    // Generuj losowe hasło
     const losoweHaslo = Math.random().toString(36).slice(-8);
     const hasloHash = await hashPassword(losoweHaslo);
 
@@ -118,12 +109,10 @@ router.get("/uzytkownicy/:id", authMiddleware, async (req: any, res) => {
 
     if (!target) return res.status(404).json({ message: "Nie znaleziono użytkownika" });
 
-    // PREZES widzi wszystko
     if (requestor?.rola === "PREZES") {
       return res.json(target);
     }
 
-    // ZAWODNIK widzi tylko siebie
     if (requestor?.rola === "ZAWODNIK") {
       if (String(requestor._id) !== String(req.params.id)) {
         return res.status(403).json({ message: "Dostęp zabroniony" });
@@ -131,7 +120,6 @@ router.get("/uzytkownicy/:id", authMiddleware, async (req: any, res) => {
       return res.json(target);
     }
 
-    // TRENER widzi tylko zawodników z JEGO kategorii
     if (requestor?.rola === "TRENER") {
       if (target.rola === "ZAWODNIK" && target.kategoria !== requestor.kategoria) {
         return res.status(403).json({
@@ -139,7 +127,6 @@ router.get("/uzytkownicy/:id", authMiddleware, async (req: any, res) => {
         });
       }
 
-      // TRENER nie widzi contractStart/contractEnd
       const targetObj = target.toObject();
       delete (targetObj as any).contractStart;
       delete (targetObj as any).contractEnd;

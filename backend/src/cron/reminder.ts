@@ -6,7 +6,6 @@ import { wyslijMaila } from "../utils/mailer";
 export function startReminders() {
   console.log("🔔 System przypomnień AKTYWNY - sprawdza co godzinę o :00");
   
-  // Sprawdzaj co godzinę o :00
   cron.schedule("0 * * * *", async () => {
     try {
       console.log(`\n[${new Date().toLocaleString('pl-PL')}] 🔍 Sprawdzam przypomnienia...`);
@@ -17,7 +16,6 @@ export function startReminders() {
       console.log(`  ⏰ Teraz: ${teraz.toLocaleString('pl-PL')}`);
       console.log(`  ⏰ Za 48h: ${za48h.toLocaleString('pl-PL')}`);
 
-      // Szukaj WSZYSTKICH ZDARZEŃ w ciągu 48h
       const wydarzenia = await Wydarzenie.find({
         data: { $gte: teraz, $lte: za48h },
         reminderSent: false
@@ -44,19 +42,16 @@ export function startReminders() {
         `;
         
         try {
-          // Wyślij tylko do uczestników którzy potwierdzili uczestnictwo (status="TAK")
           const uczestnicyTAK = w.uczestnicy.filter((u: any) => u.status === "TAK").map((u: any) => u.zawodnik);
           const maileZawodnikow = (uczestnicyTAK as any[])
             .map(u => u.email)
             .filter(Boolean);
           
-          // Dodaj trenera kategorii
           const trener = await Uzytkownik.findOne({ 
             rola: "TRENER", 
             kategoria: w.categoria 
           });
           
-          // Dodaj prezesa
           const prezes = await Uzytkownik.findOne({ rola: "PREZES" });
           
           const maile: string[] = [
@@ -65,7 +60,6 @@ export function startReminders() {
             ...(prezes?.email ? [prezes.email] : [])
           ];
           
-          // Usuń duplikaty
           const unikatneMaile = [...new Set(maile)];
           
           console.log(`  📧 ${w.tytul}: ${unikatneMaile.length} odbiorców`);
@@ -78,7 +72,6 @@ export function startReminders() {
             console.log(`    ✅ Mail wysłany do: ${unikatneMaile.join(', ')}`);
           }
           
-          // Oznacz że reminder już wysłany
           w.reminderSent = true;
           await w.save();
           console.log(`    ✅ reminderSent = true`);

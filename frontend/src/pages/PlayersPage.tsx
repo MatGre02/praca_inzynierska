@@ -84,7 +84,6 @@ const PlayersPage = () => {
         allPlayers = [];
       }
 
-      // Filtruj tylko zawodników po stronie frontend
       const players = allPlayers.filter(p => p.rola === 'ZAWODNIK');
       setPlayers(players);
     } catch (err: any) {
@@ -109,13 +108,11 @@ const PlayersPage = () => {
   const getFilteredPlayers = () => {
     let filtered = players;
 
-    // Filtrowanie po imieniu
     if (selectedFilters.imie.trim()) {
       const imie = selectedFilters.imie.toLowerCase();
       filtered = filtered.filter(p => p.imie?.toLowerCase().includes(imie));
     }
 
-    // Filtrowanie po nazwisku
     if (selectedFilters.nazwisko.trim()) {
       const nazwisko = selectedFilters.nazwisko.toLowerCase();
       filtered = filtered.filter(p => p.nazwisko?.toLowerCase().includes(nazwisko));
@@ -131,7 +128,6 @@ const PlayersPage = () => {
       setLoading(true);
       setError('');
 
-      // Pobierz wszystkich użytkowników
       const response = await adminService.getUsers({});
       let allPlayers: any[] = [];
       
@@ -143,11 +139,9 @@ const PlayersPage = () => {
         allPlayers = [];
       }
 
-      // Filtruj tylko zawodników po stronie frontend
       const players = allPlayers.filter(p => p.rola === 'ZAWODNIK');
       setPlayers(players);
 
-      // Reset filtrów na koniec
       setSelectedFilters({
         category: '',
         position: '',
@@ -182,13 +176,13 @@ const PlayersPage = () => {
   const getPositionColor = (pozycja?: string): 'primary' | 'error' | 'warning' | 'success' | 'info' | 'default' => {
     switch (pozycja) {
       case 'BRAMKARZ':
-        return 'info'; // Niebieski
+        return 'info'; 
       case 'OBRONCA':
-        return 'primary'; // Główny niebieski
+        return 'primary'; 
       case 'POMOCNIK':
-        return 'warning'; // Pomarańczowy
+        return 'warning'; 
       case 'NAPASTNIK':
-        return 'error'; // Czerwony
+        return 'error'; 
       default:
         return 'default';
     }
@@ -209,13 +203,11 @@ const PlayersPage = () => {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      {/* Panel filtrowania */}
       <Paper sx={{ p: 3, mb: 3, backgroundColor: '#1e1e1e' }}>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
           🔍 Filtry i Wyszukiwanie
         </Typography>
         <Grid container spacing={2}>
-          {/* Wyszukiwanie po imieniu */}
           <Grid item xs={12} sm={6} md={3}>
             <TextField
               fullWidth
@@ -227,7 +219,6 @@ const PlayersPage = () => {
             />
           </Grid>
 
-          {/* Wyszukiwanie po nazwisku */}
           <Grid item xs={12} sm={6} md={3}>
             <TextField
               fullWidth
@@ -239,7 +230,6 @@ const PlayersPage = () => {
             />
           </Grid>
 
-          {/* Filtr po kategorii - tylko dla PREZESA */}
           {user?.rola === 'PREZES' && filters.kategorie.length > 0 && (
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth size="small">
@@ -258,7 +248,6 @@ const PlayersPage = () => {
             </Grid>
           )}
 
-          {/* Filtr po pozycji */}
           {filters.pozycje.length > 0 && (
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth size="small">
@@ -279,7 +268,6 @@ const PlayersPage = () => {
             </Grid>
           )}
 
-          {/* Przyciski akcji */}
           <Grid 
             item 
             xs={12} 
@@ -312,14 +300,12 @@ const PlayersPage = () => {
         </Grid>
       </Paper>
 
-      {/* Liczba wyników */}
       <Box sx={{ mb: 2 }}>
         <Typography variant="body2" color="text.secondary">
           Znaleziono: <strong>{filteredPlayers.length}</strong> zawodników
         </Typography>
       </Box>
 
-      {/* Tabela zawodników */}
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />

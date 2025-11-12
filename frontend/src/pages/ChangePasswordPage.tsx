@@ -56,7 +56,6 @@ export const ChangePasswordPage = () => {
       setNoweHaslo('');
       setNoweHasloConfirm('');
       
-      // Przekieruj do dashboard-u po 2 sekundach
       setTimeout(() => {
         navigate('/');
       }, 2000);

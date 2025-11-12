@@ -33,7 +33,6 @@ const MessagesPage = () => {
       try {
         setLoading(true);
         
-        // Użyj nowego endpointa /mail/recipients który zwraca prawidłowo przefiltrowanych odbiorców
         const response = await mailService.getRecipients();
         const allRecipients = response.data.recipients;
 
@@ -60,7 +59,6 @@ const MessagesPage = () => {
     try {
       setLoading(true);
 
-      // Konwertuj emaile na ID
       const recipientIds: string[] = [];
       for (const email of selectedRecipients) {
         const recipient = recipients.find((r) => r.email === email);
@@ -77,7 +75,6 @@ const MessagesPage = () => {
         return;
       }
 
-      // Konstruowanie treści maila
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; color: #333;">
           <h2>Wiadomość od: ${user?.imie} ${user?.nazwisko}</h2>
@@ -92,7 +89,6 @@ const MessagesPage = () => {
         </div>
       `;
 
-      // Wysłanie maila - backend oczekuje listy ID odbiorców
       await mailService.send(
         recipientIds,
         `${subject} - od ${user?.imie} ${user?.nazwisko}`,
@@ -105,7 +101,6 @@ const MessagesPage = () => {
       setSelectedRecipients([]);
       setError('');
 
-      // Ukryj success message po 3 sekundach
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error('Błąd wysyłania wiadomości:', err);
@@ -145,7 +140,6 @@ const MessagesPage = () => {
         )}
 
         <Box sx={{ display: 'grid', gap: 3 }}>
-          {/* Wybór odbiorców */}
           <FormControl fullWidth>
             <InputLabel id="recipient-label">Odbiorca (możesz wybrać kilka osób)</InputLabel>
             <Select
@@ -187,7 +181,6 @@ const MessagesPage = () => {
             </Select>
           </FormControl>
 
-          {/* Temat */}
           <TextField
             fullWidth
             label="Temat wiadomości"
@@ -198,7 +191,6 @@ const MessagesPage = () => {
             variant="outlined"
           />
 
-          {/* Treść */}
           <TextField
             fullWidth
             label="Treść wiadomości"
@@ -211,7 +203,6 @@ const MessagesPage = () => {
             variant="outlined"
           />
 
-          {/* Informacja o wysyłaniu */}
           {selectedRecipients.length > 0 && (
             <Box sx={{ 
               p: 2, 
@@ -226,7 +217,6 @@ const MessagesPage = () => {
             </Box>
           )}
 
-          {/* Przycisk wysyłania */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               variant="contained"
@@ -239,7 +229,6 @@ const MessagesPage = () => {
             </Button>
           </Box>
 
-          {/* Counter znaków */}
           <Typography variant="caption" color="text.secondary">
             Znaki w wiadomości: {message.length}
           </Typography>

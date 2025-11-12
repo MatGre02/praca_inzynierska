@@ -179,7 +179,6 @@ const HomePage = () => {
         </Typography>
       </Box>
 
-      {/* Menu dla PREZES-a */}
       {user?.rola === 'PREZES' && (
         <Grid container spacing={3}>
           {prezesMenuCards.map((card) => (
@@ -225,7 +224,6 @@ const HomePage = () => {
         </Grid>
       )}
 
-      {/* Menu dla TRENERA */}
       {user?.rola === 'TRENER' && (
         <Grid container spacing={3}>
           {trenerMenuCards.map((card) => (
@@ -271,7 +269,6 @@ const HomePage = () => {
         </Grid>
       )}
 
-      {/* Menu dla ZAWODNIKA */}
       {user?.rola === 'ZAWODNIK' && (
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={4}>

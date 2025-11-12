@@ -28,7 +28,6 @@ router.post(
 
       const allPlayerIds = [...body.startingEleven, ...body.bench];
 
-      // Jeśli to TRENER – może tworzyć tylko dla swojej kategorii
       if (req.user?.rola === "TRENER") {
         const players = await Uzytkownik.find({ _id: { $in: allPlayerIds } });
         const trenerCategory = (await Uzytkownik.findById(req.user.id))?.kategoria;
@@ -42,7 +41,6 @@ router.post(
         }
       }
 
-      // Stwórz nową kadrę
       const trener = await Uzytkownik.findById(req.user?.id);
       const squad = new Squad({
         title: body.title,
@@ -82,15 +80,12 @@ router.get(
     try {
       let query: any = {};
 
-      // TRENER - powinien widzieć tylko swoje kadry
       if (req.user?.rola === "TRENER") {
         query.createdBy = req.user.id;
       }
-      // ZAWODNIK - powinien widzieć kadry z jego kategorii
       else if (req.user?.rola === "ZAWODNIK") {
         query.categoria = req.user.kategoria;
       }
-      // PREZES - widzi wszystkie kadry (query pusty)
 
       const squads = await Squad.find(query)
         .populate("startingEleven", "imie nazwisko pozycja email")
@@ -145,7 +140,6 @@ router.patch(
         return res.status(404).json({ message: "Kadra nie znaleziona" });
       }
 
-      // Jeśli TRENER – może edytować tylko jeśli to on ją stworzył
       if (req.user?.rola === "TRENER") {
         if (String(squad.createdBy) !== String(req.user.id)) {
           return res.status(403).json({
@@ -153,7 +147,6 @@ router.patch(
           });
         }
 
-        // Sprawdź kategorię zawodników
         const allPlayerIds = [...body.startingEleven, ...body.bench];
         const players = await Uzytkownik.find({ _id: { $in: allPlayerIds } });
         const trenerCategory = (await Uzytkownik.findById(req.user.id))?.kategoria;
@@ -167,7 +160,6 @@ router.patch(
         }
       }
 
-      // Aktualizuj
       squad.title = body.title;
       squad.startingEleven = body.startingEleven.map(id => new (require("mongoose").Types.ObjectId)(id));
       squad.bench = body.bench.map(id => new (require("mongoose").Types.ObjectId)(id));
@@ -208,7 +200,6 @@ router.delete(
         return res.status(404).json({ message: "Kadra nie znaleziona" });
       }
 
-      // Jeśli TRENER – może usunąć tylko swoją
       if (req.user?.rola === "TRENER" && String(squad.createdBy) !== String(req.user.id)) {
         return res.status(403).json({
           message: "Nie masz uprawnień do usunięcia tej kadry"

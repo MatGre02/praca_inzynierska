@@ -15,24 +15,20 @@ router.get("/filters/available", authMiddleware, async (req: AuthRequest, res) =
     let zawodnicy: any[] = [];
 
     if (req.user?.rola === "TRENER") {
-      // TRENER widzi tylko zawodników z jego kategorii
       zawodnicy = await Uzytkownik.find({
         rola: "ZAWODNIK",
         kategoria: req.user?.kategoria
       }).select("kategoria pozycja");
     } else if (req.user?.rola === "PREZES") {
-      // PREZES widzi wszystkich zawodników
       zawodnicy = await Uzytkownik.find({
         rola: "ZAWODNIK"
       }).select("kategoria pozycja");
     }
-    // ZAWODNIK nie potrzebuje zawodników do filtrów
 
-    // Pobierz unikalne wartości
+
     const kategorie = [...new Set(zawodnicy.map(z => z.kategoria).filter(Boolean))].sort();
     const pozycje = [...new Set(zawodnicy.map(z => z.pozycja).filter(Boolean))].sort();
 
-    // Pobierz unikalne sezony ze statystyk
     const statystyki = await Statystyka.find().select("sezon");
     const sezony = [...new Set(statystyki.map(s => s.sezon).filter(Boolean))].sort().reverse();
 
@@ -69,10 +65,8 @@ router.post("/:zawodnikId",
         czysteKonta
       } = req.body ?? {};
 
-      // Pobierz trenera/prezesa
       const requester = await Uzytkownik.findById(req.user?.id);
       
-      // Jeśli TRENER – sprawdź czy zawodnik z jego kategorii
       if (requester?.rola === "TRENER") {
         const zawodnik = await Uzytkownik.findById(zawodnikId);
         if (!zawodnik || zawodnik.kategoria !== requester.kategoria) {
@@ -151,7 +145,6 @@ router.get("/", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: A
 
     let zawodnikIds: any[] = [];
 
-    // Jeśli TRENER - zawsze filtruj po jego kategorii
     if (req.user?.rola === "TRENER") {
       const zawodnicy = await Uzytkownik.find({
         rola: "ZAWODNIK",
@@ -160,7 +153,6 @@ router.get("/", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: A
       
       zawodnikIds = zawodnicy.map((z: any) => z._id);
     } else if (req.user?.rola === "PREZES") {
-      // PREZES - jeśli kategoria podana, filtruj po niej
       if (kategoria) {
         const zawodnicy = await Uzytkownik.find({
           rola: "ZAWODNIK",
@@ -171,7 +163,6 @@ router.get("/", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: A
       }
     }
 
-    // Filtruj po pozycji
     if (pozycja) {
       const query: any = {
         rola: "ZAWODNIK",
@@ -185,17 +176,14 @@ router.get("/", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: A
       zawodnikIds = zawodnicy.map((z: any) => z._id);
     }
 
-    // Filtruj po konkretnym zawodniku
     if (zawodnikId) {
       zawodnikIds = [zawodnikId];
     }
 
-    // Jeśli mamy ograniczenie zawodników, dodaj do filtru
     if (zawodnikIds.length > 0) {
       filter.zawodnikId = { $in: zawodnikIds };
     }
 
-    // Paginacja
     const pageNum = Math.max(1, parseInt(page) || 1);
     const limitNum = Math.max(1, Math.min(100, parseInt(limit) || 100));
     const skip = (pageNum - 1) * limitNum;
@@ -244,16 +232,13 @@ router.patch("/:statystykaId",
         czysteKonta
       } = req.body ?? {};
 
-      // Znajdź statystykę
       const stat = await Statystyka.findById(statystykaId);
       if (!stat) {
         return res.status(404).json({ message: "Statystyki nie znalezione" });
       }
 
-      // Pobierz trenera/prezesa
       const requester = await Uzytkownik.findById(req.user?.id);
       
-      // Jeśli TRENER – sprawdź czy zawodnik z jego kategorii
       if (requester?.rola === "TRENER") {
         const zawodnik = await Uzytkownik.findById(stat.zawodnikId);
         if (!zawodnik || zawodnik.kategoria !== requester.kategoria) {
@@ -263,7 +248,6 @@ router.patch("/:statystykaId",
         }
       }
 
-      // Aktualizuj pola
       if (sezon !== undefined) stat.sezon = sezon;
       if (zolteKartki !== undefined) stat.zolteKartki = zolteKartki;
       if (czerwoneKartki !== undefined) stat.czerwoneKartki = czerwoneKartki;

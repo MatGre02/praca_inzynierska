@@ -9,7 +9,6 @@ const client: AxiosInstance = axios.create({
   },
 });
 
-// Add auth token to requests
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -18,7 +17,6 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// Export individual service objects
 export const authService = {
   login: (email: string, haslo: string) =>
     client.post('/auth/logowanie', { email, haslo }),
@@ -103,15 +101,6 @@ export const mailService = {
     client.post('/mail/send-category', { category, subject, html }),
   getRecipients: () =>
     client.get('/mail/recipients'),
-};
-
-export const reportsService = {
-  getPlayers: (format: 'json' | 'csv' = 'json', sezon?: string) =>
-    client.get('/reports/players', { params: { format, sezon } }),
-  getByCategory: (category: string, format: 'json' | 'csv' = 'json') =>
-    client.get(`/reports/category/${category}`, { params: { format } }),
-  getByPosition: (position: string, format: 'json' | 'csv' = 'json') =>
-    client.get(`/reports/position/${position}`, { params: { format } }),
 };
 
 export default client;

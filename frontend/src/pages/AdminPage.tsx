@@ -39,12 +39,10 @@ const AdminPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // Modal state
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
-  // Edit form state
   const [editForm, setEditForm] = useState({
     imie: '',
     nazwisko: '',
@@ -56,7 +54,6 @@ const AdminPage = () => {
     noweHasloPowtorz: '',
   });
 
-  // Tylko PREZES może być tutaj
   if (user?.rola !== 'PREZES') {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -69,7 +66,6 @@ const AdminPage = () => {
     );
   }
 
-  // Pobieranie listy użytkowników
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -109,7 +105,6 @@ const AdminPage = () => {
   };
 
   const handleDeleteOpen = (userData: User) => {
-    // PREZES nie może usunąć sam siebie
     if ((userData.id || (userData as any)._id) === (user?.id || (user as any)._id)) {
       setError('❌ Nie możesz usunąć sam siebie!');
       return;
@@ -126,7 +121,6 @@ const AdminPage = () => {
   const handleEditSubmit = async () => {
     if (!selectedUser) return;
 
-    // Walidacja hasła jeśli zmienia hasło
     if (editForm.noweHaslo || editForm.noweHasloPowtorz) {
       if (editForm.noweHaslo !== editForm.noweHasloPowtorz) {
         setError('❌ Hasła się nie zgadzają');
@@ -142,7 +136,6 @@ const AdminPage = () => {
       setLoading(true);
       const userId = selectedUser.id || (selectedUser as any)._id;
 
-      // Aktualizuj dane użytkownika
       await adminService.updateUserRole(userId, editForm.rola);
       
       if (editForm.pozycja) {
@@ -153,7 +146,6 @@ const AdminPage = () => {
         await adminService.updateUserCategory(userId, editForm.kategoria);
       }
 
-      // Zmiana hasła jeśli podane
       if (editForm.noweHaslo) {
         await adminService.updateUserPassword(userId, editForm.noweHaslo);
       }
@@ -302,7 +294,6 @@ const AdminPage = () => {
         </Typography>
       </Paper>
 
-      {/* Modal edycji */}
       <Dialog open={editOpen} onClose={handleEditClose} maxWidth="sm" fullWidth>
         <DialogTitle>✏️ Edytuj Użytkownika</DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
@@ -388,7 +379,6 @@ const AdminPage = () => {
             </FormControl>
           )}
 
-          {/* Sekcja: Zmiana Hasła */}
           <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #e0e0e0' }}>
             <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold', color: '#1976d2' }}>
               🔐 Zmień Hasło (opcjonalnie)
@@ -425,7 +415,6 @@ const AdminPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Modal usuwania */}
       <Dialog open={deleteOpen} onClose={handleDeleteClose}>
         <DialogTitle>⚠️ Potwierdź Usunięcie</DialogTitle>
         <DialogContent>

@@ -1,9 +1,7 @@
-/* Calendar Container */
 .calendar-wrapper {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Header Styling */
 .rbc-toolbar {
   padding: 15px !important;
   background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
@@ -48,7 +46,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Month View */
 .rbc-calendar {
   border: none !important;
 }
@@ -63,7 +60,6 @@
   min-height: 100px !important;
 }
 
-/* Day Cells */
 .rbc-date-cell {
   padding: 8px 4px !important;
   text-align: right !important;
@@ -87,7 +83,6 @@
   background: linear-gradient(to bottom, #f5f9ff, #ecf3ff) !important;
 }
 
-/* Events */
 .rbc-event {
   background: linear-gradient(135deg, #1976d2, #1565c0) !important;
   border: none !important;
@@ -117,7 +112,6 @@
   text-overflow: ellipsis !important;
 }
 
-/* Week/Day View */
 .rbc-time-view {
   border: none !important;
 }
@@ -136,7 +130,6 @@
   height: 2px !important;
 }
 
-/* Header Weekdays */
 .rbc-header {
   background: linear-gradient(135deg, #f5f5f5, #eeeeee) !important;
   border-bottom: 2px solid #e0e0e0 !important;
@@ -146,17 +139,14 @@
   font-size: 13px !important;
 }
 
-/* Show Off Dates */
 .rbc-off-range {
   background: #fafafa !important;
 }
 
-/* Selected Event */
 .rbc-selected {
   background-color: #ffeb3b !important;
 }
 
-/* Agenda View */
 .rbc-agenda-view {
   border: none !important;
 }
@@ -196,7 +186,6 @@
   font-weight: 500 !important;
 }
 
-/* Show More */
 .rbc-show-more {
   background: linear-gradient(135deg, #1976d2, #1565c0) !important;
   color: white !important;
@@ -225,12 +214,11 @@
   border-radius: 6px 6px 0 0 !important;
 }
 
-/* Slot Selection */
+
 .rbc-slot-selecting .rbc-time-slot {
   background-color: #bbdefb !important;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .rbc-toolbar {
     flex-direction: column !important;

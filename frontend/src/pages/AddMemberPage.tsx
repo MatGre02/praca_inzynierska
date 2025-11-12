@@ -52,7 +52,6 @@ const AddMemberPage = () => {
     contractEnd: '',
   });
 
-  // Tylko PREZES może dodawać członków
   if (user?.rola !== 'PREZES') {
     return (
       <Container maxWidth="sm" sx={{ py: 4 }}>
@@ -172,7 +171,6 @@ const AddMemberPage = () => {
         contractEnd: '',
       });
 
-      // Pokaż response message z hasłem
       if (response.status === 201) {
         const data = await response.json();
         alert(`✅ ${data.message}`);
@@ -208,7 +206,6 @@ const AddMemberPage = () => {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* Sekcja: Dane osobowe */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2, color: '#424242', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
               📋 Dane Osobowe
@@ -275,7 +272,6 @@ const AddMemberPage = () => {
 
           <Divider sx={{ my: 3 }} />
 
-          {/* Sekcja: Rola i szczegóły */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2, color: '#424242', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
               👤 Rola w Klubie
@@ -296,7 +292,6 @@ const AddMemberPage = () => {
                 </FormControl>
               </Grid>
 
-              {/* Kategoria - tylko dla ZAWODNIKA */}
               {formData.rola === 'ZAWODNIK' && (
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
@@ -319,7 +314,6 @@ const AddMemberPage = () => {
                 </Grid>
               )}
 
-              {/* Pozycja - tylko dla ZAWODNIKA */}
               {formData.rola === 'ZAWODNIK' && (
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
@@ -339,7 +333,6 @@ const AddMemberPage = () => {
                 </Grid>
               )}
 
-              {/* Kategoria dla TRENERA */}
               {formData.rola === 'TRENER' && (
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth>
@@ -366,7 +359,6 @@ const AddMemberPage = () => {
 
           <Divider sx={{ my: 3 }} />
 
-          {/* Sekcja: Kontrakt */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2, color: '#424242', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
               📅 Kontrakt
@@ -420,7 +412,6 @@ const AddMemberPage = () => {
 
           <Divider sx={{ my: 3 }} />
 
-          {/* Przycisk wysyłania */}
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
             <Button
               variant="outlined"

@@ -35,13 +35,11 @@ router.post(
     try {
       const body = sendMailSchema.parse(req.body);
 
-      // Pobierz obsługującego użytkownika
       const sender = await Uzytkownik.findById(req.user?.id);
       if (!sender) {
         return res.status(404).json({ message: "Użytkownik nie znaleziony" });
       }
 
-      // Pobierz odbiorców
       const recipients = await Uzytkownik.find({ _id: { $in: body.to } });
 
       // ZAWODNIK – tylko trener z jego kategorii + prezes
@@ -79,8 +77,6 @@ router.post(
       }
 
       // PREZES – brak ograniczeń (wszyscy mogą)
-
-      // Wysyłanie maili
       const emails = recipients.map(r => r.email).filter(Boolean);
 
       if (emails.length === 0) {
@@ -130,14 +126,12 @@ router.post(
         return res.status(404).json({ message: "Użytkownik nie znaleziony" });
       }
 
-      // TRENER – może wysłać tylko do swojej kategorii
       if (sender.rola === "TRENER" && body.category !== sender.kategoria) {
         return res.status(403).json({
           message: "Możesz wysyłać maile tylko do swojej kategorii"
         });
       }
 
-      // Pobierz użytkowników z kategorii
       const recipients = await Uzytkownik.find({ kategoria: body.category });
 
       if (recipients.length === 0) {
@@ -181,7 +175,6 @@ router.get(
       let recipients: any[] = [];
 
       if (sender.rola === "ZAWODNIK") {
-        // Zawodnik może wysyłać do: trenera z jego kategorii + prezes
         recipients = await Uzytkownik.find({
           $or: [
             { rola: "PREZES" },
@@ -190,23 +183,20 @@ router.get(
         }).select("_id email imie nazwisko rola kategoria");
 
       } else if (sender.rola === "TRENER") {
-        // Trener może wysyłać do: zawodników z jego kategorii + WSZYSCY inni trenerzy + prezes
         recipients = await Uzytkownik.find({
           $or: [
             { rola: "ZAWODNIK", kategoria: sender.kategoria },
-            { rola: "TRENER", _id: { $ne: sender._id } }, // Wszyscy trenerzy poza sobą
+            { rola: "TRENER", _id: { $ne: sender._id } }, 
             { rola: "PREZES" }
           ]
         }).select("_id email imie nazwisko rola kategoria");
 
       } else if (sender.rola === "PREZES") {
-        // Prezes może wysyłać do wszystkich (poza sobą)
         recipients = await Uzytkownik.find({
           _id: { $ne: sender._id }
         }).select("_id email imie nazwisko rola kategoria");
       }
 
-      // Sortuj po roli i nazwisku
       recipients.sort((a, b) => {
         const rolaOrder = { PREZES: 0, TRENER: 1, ZAWODNIK: 2 };
         const aOrder = rolaOrder[a.rola as keyof typeof rolaOrder] || 3;

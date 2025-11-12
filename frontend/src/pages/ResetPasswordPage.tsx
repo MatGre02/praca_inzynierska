@@ -57,7 +57,6 @@ export const ResetPasswordPage = () => {
       setHaslo('');
       setHasloConfirm('');
       
-      // Przekieruj do logowania po 2 sekundach
       setTimeout(() => {
         navigate('/login');
       }, 2000);

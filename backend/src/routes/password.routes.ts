@@ -8,7 +8,6 @@ import { authMiddleware, AuthRequest } from "../middleware/auth.middleware";
 
 const router = Router();
 
-// Schemat walidacji
 const forgotPasswordSchema = z.object({
   email: z.string().email("Nieprawidłowy email")
 });
@@ -33,28 +32,23 @@ router.post("/forgot-password", async (req, res) => {
 
     const user = await Uzytkownik.findOne({ email: body.email });
     if (!user) {
-      // Nie wyświetlaj czy email istnieje (bezpieczeństwo)
       return res.json({
         message: "Jeśli email istnieje, wyślemy link do resetu hasła"
       });
     }
 
-    // Generuj token
     const token = crypto.randomBytes(32).toString("hex");
     const tokenHash = crypto
       .createHash("sha256")
       .update(token)
       .digest("hex");
 
-    // Ustaw ważność tokena na 15 minut
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    // Zapisz hash i czas wygaśnięcia
     user.resetTokenHash = tokenHash;
     user.resetTokenExp = expiresAt;
     await user.save();
 
-    // Wyślij mail z tokenem
     const resetLink = `${process.env.FRONTEND_URL || "http://localhost:3000"}/reset-password?token=${token}`;
     const html = `
       <h2>Reset hasła</h2>
@@ -91,16 +85,14 @@ router.post("/reset-password", async (req, res) => {
   try {
     const body = resetPasswordSchema.parse(req.body);
 
-    // Hashuj token z żądania
     const tokenHash = crypto
       .createHash("sha256")
       .update(body.token)
       .digest("hex");
 
-    // Szukaj użytkownika z tym hashem i czasem ważności
     const user = await Uzytkownik.findOne({
       resetTokenHash: tokenHash,
-      resetTokenExp: { $gt: new Date() } // Jeszcze ważny
+      resetTokenExp: { $gt: new Date() } 
     });
 
     if (!user) {
@@ -109,10 +101,8 @@ router.post("/reset-password", async (req, res) => {
       });
     }
 
-    // Hashuj nowe hasło
     const hasloHash = await hashPassword(body.noweHaslo);
 
-    // Aktualizuj hasło i wyczyść token
     user.hasloHash = hasloHash;
     await Uzytkownik.updateOne(
       { _id: user._id },
@@ -122,7 +112,6 @@ router.post("/reset-password", async (req, res) => {
       }
     );
 
-    // Wyślij potwierdzenie
     const html = `
       <h2>Hasło zostało zmienione</h2>
       <p>Cześć ${user.imie || "użytkowniku"}!</p>
@@ -163,7 +152,6 @@ router.post("/change-password", authMiddleware, async (req: AuthRequest, res) =>
       return res.status(404).json({ message: "Użytkownik nie znaleziony" });
     }
 
-    // Sprawdź stare hasło
     const isValid = await verifyPassword(body.staroHaslo, user.hasloHash);
     if (!isValid) {
       return res.status(401).json({
@@ -171,7 +159,6 @@ router.post("/change-password", authMiddleware, async (req: AuthRequest, res) =>
       });
     }
 
-    // Hashuj nowe hasło
     const hasloHash = await hashPassword(body.noweHaslo);
     user.hasloHash = hasloHash;
     await user.save();
