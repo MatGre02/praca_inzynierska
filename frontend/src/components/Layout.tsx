@@ -42,7 +42,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     { label: 'Kadra Meczowa', icon: <GroupIcon />, path: '/squad', show: true },
     { label: 'Statystyki', icon: <DescriptionIcon />, path: '/stats', show: user?.rola !== 'ZAWODNIK' },
     { label: 'Wiadomości', icon: <MailIcon />, path: '/messages', show: user?.rola !== 'ZAWODNIK' },
-    { label: 'Raporty', icon: <DescriptionIcon />, path: '/reports', show: user?.rola === 'PREZES' },
     { label: 'Admin', icon: <AdminIcon />, path: '/admin', show: user?.rola === 'PREZES' },
     { label: 'O klubie', icon: <InfoIcon />, path: '/contact', show: true },
   ];

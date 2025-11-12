@@ -13,7 +13,6 @@ import SquadPage from './pages/SquadPage.tsx';
 import StatsPage from './pages/StatsPage.tsx';
 import AdminPage from './pages/AdminPage.tsx';
 import PlayersPage from './pages/PlayersPage.tsx';
-import ReportsPage from './pages/ReportsPage.tsx';
 import ContactPage from './pages/ContactPage.tsx';
 import AddMemberPage from './pages/AddMemberPage.tsx';
 import AddStatsPage from './pages/AddStatsPage.tsx';
@@ -127,16 +126,6 @@ function App() {
                 <ProtectedRoute>
                   <Layout>
                     <PlayersPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ReportsPage />
                   </Layout>
                 </ProtectedRoute>
               }

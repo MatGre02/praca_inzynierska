@@ -9,6 +9,8 @@ export type TypWydarzenia =
 
 export type StatusUdzialu = "TAK" | "NIE" | "NIEOKRESLONY";
 
+export type Categoria = "U9" | "U11" | "U13" | "U15" | "U17" | "U19" | "SENIOR";
+
 export interface IUczestnik {
   zawodnik: mongoose.Types.ObjectId;
   status: StatusUdzialu;
@@ -21,8 +23,9 @@ export interface IWydarzenie extends Document {
   data: Date;
   dataKonca?: Date;
   lokalizacja?: string;
+  categoria: Categoria;                         // kategoria wiekowa
   utworzyl: mongoose.Types.ObjectId;           // ref do Uzytkownik (prezes/trener)
-  uczestnicy: IUczestnik[];                     // tylko dla TRENING – inni też mogą, ale nie wymagane
+  uczestnicy: IUczestnik[];                     // RSVP - tylko dla TRENING
   reminderSent?: boolean;                       // flaga dla crona
 }
 
@@ -43,6 +46,11 @@ const WydarzenieSchema = new Schema<IWydarzenie>(
     data: { type: Date, required: true },
     dataKonca: { type: Date },
     lokalizacja: { type: String },
+    categoria: {
+      type: String,
+      enum: ["U9", "U11", "U13", "U15", "U17", "U19", "SENIOR"],
+      required: true
+    },
     utworzyl: { type: Schema.Types.ObjectId, ref: "Uzytkownik", required: true },
     uczestnicy: { type: [UczestnikSchema], default: [] },
     reminderSent: { type: Boolean, default: false }

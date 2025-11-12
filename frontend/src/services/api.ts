@@ -67,18 +67,20 @@ export const statystykiService = {
 };
 
 export const wydarzeniaService = {
-  getAll: () =>
-    client.get('/wydarzenia'),
+  getAll: (params?: any) =>
+    client.get('/wydarzenia', { params }),
   getById: (id: string) =>
-    client.get(`/evenimente/${id}`),
+    client.get(`/wydarzenia/${id}`),
   create: (data: any) =>
     client.post('/wydarzenia', data),
   update: (id: string, data: any) =>
     client.patch(`/wydarzenia/${id}`, data),
   delete: (id: string) =>
     client.delete(`/wydarzenia/${id}`),
-  respondToEvent: (id: string, odpowiedz: 'TAK' | 'NIE') =>
-    client.post(`/wydarzenia/${id}/udzial`, { odpowiedz }),
+  submitRSVP: (id: string, wezmieUdzial: boolean) =>
+    client.post(`/wydarzenia/${id}/udzial`, { wezmieUdzial }),
+  getParticipants: (id: string) =>
+    client.get(`/wydarzenia/${id}/uczestnicy`),
 };
 
 export const squadsService = {

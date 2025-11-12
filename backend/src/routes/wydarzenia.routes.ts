@@ -10,16 +10,25 @@ const router = Router();
 // Utwórz wydarzenie (PREZES, TRENER)
 router.post("/", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: AuthRequest, res) => {
   try {
-    const { tytul, opis, typ, data } = req.body as {
-      tytul: string; opis?: string; typ: TypWydarzenia; data: string;
+    const { tytul, opis, typ, data, lokalizacja, dataKonca, categoria } = req.body as {
+      tytul: string; opis?: string; typ: TypWydarzenia; data: string; lokalizacja?: string; dataKonca?: string; categoria: string;
     };
-    if (!tytul || !typ || !data) return res.status(400).json({ message: "Brak wymaganych pól" });
+    if (!tytul || !typ || !data || !categoria) return res.status(400).json({ message: "Brak wymaganych pół" });
+
+    // TRENER może tworzyć tylko dla swojej kategorii
+    const user = await Uzytkownik.findById(req.user!.id);
+    if (user?.rola === "TRENER" && user.kategoria !== categoria) {
+      return res.status(403).json({ message: "Trener może tworzyć wydarzenia tylko dla swojej kategorii" });
+    }
 
     const doc = await Wydarzenie.create({
       tytul,
       opis,
       typ,
       data: new Date(data),
+      dataKonca: dataKonca ? new Date(dataKonca) : undefined,
+      lokalizacja,
+      categoria,
       utworzyl: req.user!.id
     });
     res.status(201).json(doc);
@@ -58,11 +67,14 @@ router.get("/", authMiddleware, async (req: AuthRequest, res) => {
     }
 
     // ZAWODNIK widzi tylko eventy z JEGO kategorii
-    // (zawodnik może mieć tylko jedną kategorię)
+    // TRENER widzi tylko eventy z JEGO kategorii
+    // PREZES widzi wszystkie
     if (requester?.rola === "ZAWODNIK") {
-      // Zawodnik widzi wszystkie eventy (bo nie ma filtrowania po kategorii w modelu)
-      // W przyszłości można dodać pole visibleToCategory w Wydarzeniu
+      filter.categoria = requester.kategoria;
+    } else if (requester?.rola === "TRENER") {
+      filter.categoria = requester.kategoria;
     }
+    // PREZES widzi wszystkie (brak filtrowania)
 
     // Paginacja
     const limitNum = Math.min(parseInt(limit as string) || 50, 100);
@@ -106,18 +118,13 @@ router.get("/", authMiddleware, async (req: AuthRequest, res) => {
 });
 
 // Szczegóły wydarzenia
-// - PREZES/TRENER: z listą uczestników
-// - ZAWODNIK: bez listy uczestników (tylko meta)
+// - PREZES/TRENER: z pełną listą uczestników
+// - ZAWODNIK: widzi listę, ale niesort (tylko swój status)
 router.get("/:id", authMiddleware, async (req: AuthRequest, res) => {
   try {
     const doc = await Wydarzenie.findById(req.params.id).populate("uczestnicy.zawodnik", "imie nazwisko email");
     if (!doc) return res.status(404).json({ message: "Nie znaleziono" });
 
-    if (req.user?.rola === "ZAWODNIK") {
-      const { uczestnicy, ...plain } = doc.toObject() as any;
-      delete plain.uczestnicy;
-      return res.json(plain);
-    }
     res.json(doc);
   } catch (e) {
     res.status(500).json({ message: "Błąd serwera" });
@@ -169,9 +176,14 @@ router.post("/:id/udzial", authMiddleware, sprawdzRole(["ZAWODNIK"]), async (req
     }
 
     await wydarzenie.save();
+    
+    // Populate po zapisaniu
+    const populatedEvent = await Wydarzenie.findById(req.params.id).populate("uczestnicy.zawodnik", "imie nazwisko email");
+    
     return res.json({
       message: "Zapisano udział",
       status: wezmieUdzial ? "TAK" : "NIE",
+      data: populatedEvent
     });
   } catch (e) {
     console.error("Błąd przy zapisie udziału:", e);
@@ -196,7 +208,7 @@ router.get("/:id/uczestnicy", authMiddleware, sprawdzRole(["PREZES", "TRENER"]),
  */
 router.patch("/:id", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (req: AuthRequest, res) => {
   try {
-    const { tytul, opis, typ, data, lokalizacja, dataKonca } = req.body;
+    const { tytul, opis, typ, data, lokalizacja, dataKonca, categoria } = req.body;
 
     const wydarzenie = await Wydarzenie.findById(req.params.id);
     if (!wydarzenie) {
@@ -220,6 +232,15 @@ router.patch("/:id", authMiddleware, sprawdzRole(["PREZES", "TRENER"]), async (r
     if (data) wydarzenie.data = new Date(data);
     if (lokalizacja) wydarzenie.lokalizacja = lokalizacja;
     if (dataKonca) wydarzenie.dataKonca = new Date(dataKonca);
+    if (categoria) {
+      if (req.user?.rola === "TRENER" && categoria !== wydarzenie.categoria) {
+        return res.status(403).json({ message: "Trener nie może zmienić kategorii wydarzenia" });
+      }
+      wydarzenie.categoria = categoria;
+    }
+
+    // Zresetuj reminderSent bo event się zmienił
+    wydarzenie.reminderSent = false;
 
     await wydarzenie.save();
 

@@ -7,7 +7,8 @@ export type Attendance = 'TAK' | 'NIE' | 'BRAK';
 
 // User type
 export interface User {
-  id: string;
+  _id?: string;  // MongoDB ID
+  id?: string;   // Mapped ID
   email: string;
   imie: string;
   nazwisko: string;
